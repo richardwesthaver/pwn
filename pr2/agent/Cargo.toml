@@ -1,0 +1,16 @@
+[package]
+name = "agent"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proto = { path = "../proto" }
+rand = "0.7"
+single-instance = "0.3"
+zip = "0.6"
+ed25519-dalek = "1"
+x25519-dalek = "1"
+base64 = "0.13"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.10"

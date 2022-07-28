@@ -1,0 +1,12 @@
+[package]
+name = "client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "3.2.14"
+thiserror = "1.0.31"
+proto = { path = "../proto" }
+unicode-width = "0.1"
+crossterm = "0.23"
+tui = "0.18.0"

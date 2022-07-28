@@ -1,0 +1,21 @@
+#+TITE:
+
+ pr2
+#+DESCRIPTION: poor richard's pet rat
+
+#+begin_src shell
+  # operator machine
+  cargo run --bin server -- -d
+  cargo run --bin client
+
+  # tmux -c
+  ./pr2
+#+end_src
+
+* hacking
+- =proto= contains common typedefs
+  - api
+  - crypto
+- =agent= is the target-side runtime
+- =client= is the c2 user interface
+- =server= is the c2 server

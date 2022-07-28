@@ -1,0 +1,15 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+proto = { path = "../proto" }
+sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls" ] }
+tokio = { version = "1.20.0", features = ["full"] }
+async-trait = "0.1.50"
+trust-dns-client = { version = "0.20.3", default-features = false }
+trust-dns-server = "0.20.3"
+trust-dns-resolver = "0.20.3"
+log = "0.4"
+tracing = "0.1.35"
