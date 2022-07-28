@@ -1,0 +1,6 @@
+#+TITLE: diz
+#+DATE: 2022-07-28
++ source code: [[https://hg.rwest.io/pwn/file/tip/diz]]
+  - [[https://github.com/richardwesthaver/pwn/diz][github mirror]]
+
+=diz= is a disassembler program leveraging the [[http://www.capstone-engine.org/][Capstone framework]].

@@ -1,0 +1,11 @@
+[package]
+name = "wasp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasmtime = "0.39.1"
+tracing-subscriber = "0.3.1"
+wasmtime-wasi = { version = "0.39.1", features = ["tokio"] }
+tokio = { version = "1.8.0", features = ["rt", "time", "macros", "rt-multi-thread"] }
+anyhow = "1.0.58"

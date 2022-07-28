@@ -1,0 +1,22 @@
+#+TITLE: pwn
+#+DATE: 2022-07-21 Thu
+#+DESCRIPTION: Pyscho War Network
++ source code: [[https://hg.rwest.io/pwn]]
+  - [[https://github.com/richardwesthaver/pwn][github mirror]]
+
+=pwn= is a collection of mischievous software and data.
+
+* hacking
+|-------+------------------------|
+| dir   | description            |
+|-------+------------------------|
+| =pr2= | poor richard's pet rat |
+| =diz= | disassembler           |
+| =lab= | util/admin/r&d         |
+|-------+------------------------|
+
+- refer to hacking sections in the readme.org file of directories
+  above.
+
+* Footnotes
+[fn:1] RAT = Remote Access Trojan 

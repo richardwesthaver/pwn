@@ -1,0 +1,9 @@
+[package]
+name = "diz"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "3.2.14"
+thiserror = "1.0.31"
+capstone = "0.11.0"
