@@ -1,0 +1,33 @@
+{
+   "description" : "UEFI Firmware, supports secure boot (git, x64)",
+   "targets" : [
+      {
+         "machines" : [
+            "pc-q35-*"
+         ],
+         "architecture" : "x86_64"
+      }
+   ],
+   "features" : [
+      "acpi-s3",
+      "requires-smm",
+      "secure-boot"
+   ],
+   "tags" : [
+      "git master autobuild"
+   ],
+   "interface-types" : [
+      "uefi"
+   ],
+   "mapping" : {
+      "executable" : {
+         "format" : "raw",
+         "filename" : "/usr/share/edk2.git/ovmf-x64/OVMF_CODE-need-smm.fd"
+      },
+      "nvram-template" : {
+         "format" : "raw",
+         "filename" : "/usr/share/edk2.git/ovmf-x64/OVMF_VARS-need-smm.fd"
+      },
+      "device" : "flash"
+   }
+}

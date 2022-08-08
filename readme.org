@@ -17,6 +17,3 @@
 
 - refer to hacking sections in the readme.org file of directories
   above.
-
-* Footnotes
-[fn:1] RAT = Remote Access Trojan 

@@ -1,2 +1,11 @@
 #+TITLE: lab
 #+DESCRIPTION: resources, tools, other gadgets
+* resources
+- [[https://wiki.osdev.org/UEFI][UEFI - osdev wiki]]
+- [[https://github.com/tianocore/edk2][EDK II]]
+- [[https://uefi.org/][UEFI specs]]
+- [[http://www.linux-kvm.org/downloads/lersek/ovmf-whitepaper-c770f8c.txt][ovmf whitepaper]]
+- [[https://www.kraxel.org/repos/jenkins/edk2/][ovmf pre-builds]]
+- [[https://github.com/rust-osdev/uefi-rs][uefi-rs]]
+- [[https://github.com/kholia/OSX-KVM][osx-kvm]]
+- [[https://www.welivesecurity.com/wp-content/uploads/2018/09/ESET-LoJax.pdf][LoJax article]]

@@ -1,0 +1,32 @@
+{
+   "targets" : [
+      {
+         "machines" : [
+            "pc-i440fx-*",
+            "pc-q35-*"
+         ],
+         "architecture" : "x86_64"
+      }
+   ],
+   "features" : [
+      "acpi-s3"
+   ],
+   "description" : "UEFI Firmware (git, x64)",
+   "interface-types" : [
+      "uefi"
+   ],
+   "tags" : [
+      "git master autobuild"
+   ],
+   "mapping" : {
+      "executable" : {
+         "format" : "raw",
+         "filename" : "/usr/share/edk2.git/ovmf-x64/OVMF_CODE-pure-efi.fd"
+      },
+      "device" : "flash",
+      "nvram-template" : {
+         "format" : "raw",
+         "filename" : "/usr/share/edk2.git/ovmf-x64/OVMF_VARS-pure-efi.fd"
+      }
+   }
+}
