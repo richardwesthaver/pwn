@@ -4,18 +4,52 @@
 #+DESCRIPTION: poor richard's pet rat
 
 #+begin_src shell
-  # operator machine
+  # server
   cargo run --bin server -- -d
+  # operator
   cargo run --bin client
-
-  # tmux -c
+  # agent
   ./pr2
 #+end_src
 
 * hacking
-- =proto= contains common typedefs
+- =proto= contains common types and traits
   - api
+    - raw message types
   - crypto
+    - crypto primitives
+  - packet
+    - packet format on the wire
 - =agent= is the target-side runtime
-- =client= is the c2 user interface
 - =server= is the c2 server
+  - TCP/HTTP(S)/UDP/DNS hosting
+  - internal postgres db
+- =client= is the c2 user interface
+  - operators should use this program to control the c2 server
+* tasks
+** TODO db queries
+  - agents
+  - jobs
+** DONE db init
+- State "TODO"       from              [2022-08-09 Tue 17:15]
+postgres SQL
+use sqlx offline mode
+** TODO stage0
+- State "TODO"       from              [2022-08-09 Tue 17:18]
+we are on untrusted device with unknown specs. goal is to gather
+information and send to c2.
+- no negotiable encryption/authentication until approved by c2 -
+  preshared key
+- no persistence
+- pings hardcoded domains - should include decoys
+- INFO
+  - cpu - arch/cores/speed
+  - ram
+  - services running
+  - drive mapping
+  - users
+  - privilege level
+  - connected devices
+  - installed drivers
+  - version info
+    

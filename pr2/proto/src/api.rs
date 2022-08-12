@@ -2,38 +2,44 @@ use crate::crypto;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
+use std::error::Error;
+use sqlx::FromRow;
+use std::convert::TryFrom;
 
-// just make a separate enum for this - result type
+pub trait ClientCoder {
+  fn tx_ack() -> Ack;
+  fn tx_syn() -> Syn;
+  fn tx_register() -> RegisterAgent;
+  fn rx_job() -> JobPayload;
+  fn tx_job_result() -> UpdateJobResult;
+}
+
+pub trait ServerCoder {
+  fn tx_ack() -> Ack;
+  fn tx_job() -> Job;
+  fn rx_register() -> AgentRegistered;
+  fn rx_job_result() -> JobResult;
+}
+
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Response<T: Serialize> {
-    pub data: Option<T>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub error: Option<Error>,
+pub struct Syn(u16);
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Ack(u16);
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Response<T: Serialize> {
+    Data(T),
+    Error(String),
 }
 
 impl<T: Serialize> Response<T> {
-    pub fn ok(data: T) -> Response<T> {
-        return Response {
-            data: Some(data),
-            error: None,
-        };
-    }
-
-    pub fn err(err: Error) -> Response<()> {
-        return Response::<()> {
-            data: None,
-            error: Some(err.into()),
-        };
-    }
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Error {
-    pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<HashMap<String, String>>,
+  pub fn ok(data: T) -> Response<T> {
+    return Response::Data(data)
+  }
+  pub fn err<E: Error>(err: E) -> Response<T> {
+    return Response::Error(err.to_string())
+  }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -47,6 +53,36 @@ pub struct RegisterAgent {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct AgentRegistered {
     pub id: Uuid,
+}
+
+pub enum JobType {
+    Task,
+    Exit,
+}
+
+impl TryFrom<&str> for JobType {
+    type Error = ();
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let s = s.to_ascii_lowercase();
+
+        if s == "task" {
+            Ok(JobType::Task)
+        } else if s == "exit" {
+            Ok(JobType::Exit)
+        } else {
+            Err(())
+        }
+    }
+}
+
+impl From<JobType> for &str {
+    fn from(job: JobType) -> Self {
+        match job {
+            JobType::Task => "task",
+            JobType::Exit => "exit",
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -103,14 +139,14 @@ pub struct AgentJob {
     pub signature: Vec<u8>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct Agent {
     pub id: Uuid,
-    pub created_at: DateTime<Utc>,
-    pub last_seen_at: DateTime<Utc>,
-    pub identity_public_key: [u8; crypto::ED25519_PUBLIC_KEY_SIZE],
     pub public_prekey: [u8; crypto::X25519_PUBLIC_KEY_SIZE],
     pub public_prekey_signature: Vec<u8>,
+    pub identity_public_key: [u8; crypto::ED25519_PUBLIC_KEY_SIZE],
+    pub created_at: DateTime<Utc>,
+    pub last_seen: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

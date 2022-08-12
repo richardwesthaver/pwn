@@ -1,0 +1,41 @@
+{
+  "db": "PostgreSQL",
+  "9d397407e8e35ddd75cceafb051fb1ad9a48070d15db0b3d785b537f853413c6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Bytea",
+          "Bytea",
+          "Bytea",
+          "Timestamptz",
+          "Timestamptz"
+        ]
+      }
+    },
+    "query": "\ninsert into agent\nvalues ($1, $2, $3, $4, $5, $6)\nreturning id;\n"
+  },
+  "c27d988b3d3ba459ab1572075d28298f95b166f1c7c686fe1b9bcb9ad749ccbf": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Timestamptz",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\nupdate agent set last_seen = $1 where id = $2;\n"
+  }
+}

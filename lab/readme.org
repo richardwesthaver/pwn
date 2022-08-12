@@ -1,5 +1,6 @@
 #+TITLE: lab
 #+DESCRIPTION: resources, tools, other gadgets
+
 * resources
 - [[https://wiki.osdev.org/UEFI][UEFI - osdev wiki]]
 - [[https://github.com/tianocore/edk2][EDK II]]
