@@ -11,3 +11,5 @@ pub use bincode::serialize;
 pub use base58;
 pub use base32;
 pub use base64;
+
+pub const MTU: usize = 65_507;

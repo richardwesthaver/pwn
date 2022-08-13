@@ -1,67 +1,46 @@
-mod app;
-mod err;
-mod ui;
+use client::{Error, get_stdin_data, Service};
+use proto::MTU;
+use std::net::SocketAddr;
+use std::env;
+use std::io::{stdin, Read};
+use tokio::net::UdpSocket;
+use tracing_subscriber::EnvFilter;
 
-use std::{io, time::{Instant, Duration} };
-use app::App;
-use tui::{backend::{Backend, CrosstermBackend}, Terminal};
-use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-
-fn run_app<B: Backend>(
-    terminal: &mut Terminal<B>,
-    mut app: App,
-) -> io::Result<()> {
-  let mut last_tick = Instant::now();
-  loop {
-    terminal.draw(|f| ui::draw(f, &mut app))?;
-    let timeout = app.state.tick_rate.checked_sub(last_tick.elapsed().as_millis() as u64)
-      .unwrap_or_else(|| 0);
-    if crossterm::event::poll(Duration::from_millis(timeout))? {
-      if let Event::Key(key) = event::read()? {
-	app.on_key(key.code);
-      }
-      if last_tick.elapsed().as_millis() as u64 >= app.state.tick_rate {
-        app.on_tick();
-        last_tick = Instant::now();
-      }
-      if app.status == app::AppStatus::SHUTDOWN {
-	return Ok(());
-      }
-    }
-  }
-}
-
-pub fn run(tick_rate: u64) -> Result<(), io::Error> {
-  // setup terminal
-  enable_raw_mode()?;
-  let mut stdout = io::stdout();
-  execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-  let backend = CrosstermBackend::new(stdout);
-  let mut terminal = Terminal::new(backend)?;
-
-  // setup app
-  let app = App::new("client", true, tick_rate);
-
-  // runit
-  run_app(&mut terminal, app)?;
-
-  // restore terminal
-  disable_raw_mode()?;
-  execute!(
-    terminal.backend_mut(),
-    LeaveAlternateScreen,
-    DisableMouseCapture
-  )?;
-  terminal.show_cursor()?;
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+  tracing_subscriber::fmt()
+    .with_env_filter(EnvFilter::from_default_env().add_directive("trace".parse()?))
+    .init();
   
+  // replace with cfg::Cfg
+  let remote_addr: SocketAddr = env::args()
+    .nth(1)
+    .unwrap_or_else(|| "127.0.0.1:8080".into())
+    .parse()?;
+
+  // ephemerial client port
+  let local_addr: SocketAddr = if remote_addr.is_ipv4() {
+    "0.0.0.0:0"
+  } else {
+    "[::]:0"
+  }
+  .parse()?;
+
+  let srv = Service::new(local_addr, remote_addr);
+  srv.start_tx().await?;
+  // let tx_task = tokio::spawn(async move {
+  //   loop {
+  //     let mut data = vec![0u8; MTU];
+  //     let (len, other) = socket.recv_from(&mut data).await.unwrap();
+  //     if other.eq(&remote_addr) {
+  // 	println!("Received {} bytes:\n{}",
+  // 		 len,
+  // 		 String::from_utf8_lossy(&data[..len])
+  // 	);  
+  //     }
+  //   }
+  // });
+  // tokio::try_join!(tx_task).unwrap();
+
   Ok(())
-
-}
-
-fn main() -> Result<(), io::Error> {
-  run(100)
 }
