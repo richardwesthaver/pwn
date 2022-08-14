@@ -1,11 +1,13 @@
-use crate::crypto::{PublicKey, Encrypted};
-use crate::serialize;
-use serde::{Serialize, Deserialize};
+use crate::{
+  crypto::{Encrypted, PublicKey},
+  serialize,
+};
+use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct EncryptedData {
-    pub public_key: PublicKey,
-    pub data: Encrypted,
+  pub public_key: PublicKey,
+  pub data: Encrypted,
 }
 
 #[derive(Deserialize, Serialize, Clone)]

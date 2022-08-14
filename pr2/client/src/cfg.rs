@@ -1,6 +1,4 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-pub struct Cfg {
-
-}
+pub struct Cfg {}

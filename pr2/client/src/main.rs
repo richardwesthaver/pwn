@@ -1,8 +1,10 @@
-use client::{Error, get_stdin_data, Service};
+use client::{get_stdin_data, Error, Service};
 use proto::MTU;
-use std::net::SocketAddr;
-use std::env;
-use std::io::{stdin, Read};
+use std::{
+  env,
+  io::{stdin, Read},
+  net::SocketAddr,
+};
 use tokio::net::UdpSocket;
 use tracing_subscriber::EnvFilter;
 
@@ -11,7 +13,7 @@ async fn main() -> Result<(), Error> {
   tracing_subscriber::fmt()
     .with_env_filter(EnvFilter::from_default_env().add_directive("trace".parse()?))
     .init();
-  
+
   // replace with cfg::Cfg
   let remote_addr: SocketAddr = env::args()
     .nth(1)
@@ -36,7 +38,7 @@ async fn main() -> Result<(), Error> {
   // 	println!("Received {} bytes:\n{}",
   // 		 len,
   // 		 String::from_utf8_lossy(&data[..len])
-  // 	);  
+  // 	);
   //     }
   //   }
   // });

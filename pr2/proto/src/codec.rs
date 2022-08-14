@@ -1,7 +1,9 @@
-use crate::deserialize;
-use crate::packet::{Packet, EncryptedData};
-use tokio_util::codec::{Encoder, Decoder};
-use bytes::{BytesMut, Buf};
+use crate::{
+  deserialize,
+  packet::{EncryptedData, Packet},
+};
+use bytes::{Buf, BytesMut};
+use tokio_util::codec::{Decoder, Encoder};
 
 // 8mb
 pub const MAX_FRAME_SIZE: usize = 8 * 1024 * 1024;
@@ -13,8 +15,8 @@ impl Encoder<Packet> for C2Codec {
     // ensure our packet is less than MAX_FRAME_SIZE
     if item.len() as usize > MAX_FRAME_SIZE {
       return Err(std::io::Error::new(
-	std::io::ErrorKind::InvalidData,
-	format!("frame of len {} is too large.", item.len())
+        std::io::ErrorKind::InvalidData,
+        format!("frame of len {} is too large.", item.len()),
       ));
     }
 
@@ -46,16 +48,16 @@ impl Decoder for C2Codec {
     let mut chk_bytes = [0u8; 4];
     chk_bytes.copy_from_slice(&src[2..6]);
     let chk = u32::from_le_bytes(chk_bytes);
-			      
+
     // avoid DoS
     if len as usize > MAX_FRAME_SIZE {
       return Err(std::io::Error::new(
-	std::io::ErrorKind::InvalidData,
-	format!("frame of len {} is too large.", len)
-	  ));
+        std::io::ErrorKind::InvalidData,
+        format!("frame of len {} is too large.", len),
+      ));
     }
 
-    if src.len() < 6+len as usize {
+    if src.len() < 6 + len as usize {
       // full frame hasn't been received yet
       //
       // reserve extra space in rx_buffer
@@ -65,8 +67,8 @@ impl Decoder for C2Codec {
     }
 
     // retrieve the val and advance buffer past this frame.
-    let val: EncryptedData = deserialize(&src[6..6+len as usize]).unwrap();
-    src.advance(6+len as usize);
+    let val: EncryptedData = deserialize(&src[6..6 + len as usize]).unwrap();
+    src.advance(6 + len as usize);
 
     // decode bytes into packet
     Ok(Some(Packet { len, chk, val }))

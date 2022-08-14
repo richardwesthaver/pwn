@@ -1,16 +1,19 @@
-pub mod error;
 pub mod cfg;
+pub mod error;
 pub mod udp;
-pub use error::Error;
-use tokio::net::UdpSocket;
-use std::net::SocketAddr;
-use proto::codec::C2Codec;
-use tokio_util::codec::{Decoder, Encoder};
-use tokio_util::codec::LinesCodec;
-use tokio_util::udp::UdpFramed;
 use bytes::BytesMut;
-use std::io::{stdin, Read};
-use futures::{Stream, Sink};
+pub use error::Error;
+use futures::{Sink, Stream};
+use proto::codec::C2Codec;
+use std::{
+  io::{stdin, Read},
+  net::SocketAddr,
+};
+use tokio::net::UdpSocket;
+use tokio_util::{
+  codec::{Decoder, Encoder, LinesCodec},
+  udp::UdpFramed,
+};
 
 use proto::packet::Packet;
 
@@ -27,7 +30,7 @@ pub struct Service {
 
 impl Service {
   pub fn new(socket: SocketAddr, remote: SocketAddr) -> Service {
-    Service{socket, remote}
+    Service { socket, remote }
   }
   pub async fn start_tx(&self) -> Result<(), Error> {
     let socket = UdpSocket::bind(self.socket).await?;

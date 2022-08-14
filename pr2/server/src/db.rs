@@ -1,8 +1,10 @@
+//! db.rs --- database
 use crate::Error;
-use sqlx::postgres::*;
-use std::net::SocketAddr;
-use uuid::Uuid;
 use chrono::Utc;
+use sqlx::postgres::*;
+use uuid::Uuid;
+use url::Url;
+
 pub mod types;
 
 #[derive(Clone, Debug)]
@@ -12,37 +14,66 @@ pub struct Pool {
 }
 
 impl Pool {
-  pub async fn new(database_url: SocketAddr) -> Result<Pool, Error> {
-  let conn_opts = PgConnectOptions::new()
-    .host(database_url.ip().to_string().as_str())
-    .port(database_url.port())
-    .database("pr2.db");
+  pub async fn new(database_url: &Url) -> Result<Pool, Error> {
+    log::info!("connecting to {}", database_url);
 
-  let writer_pool = PgPoolOptions::new()
-    .max_connections(1)
-    .connect_with(conn_opts.clone())
-    .await?;
+    let host = if let Some(host) = database_url.host_str() {
+      host
+    } else {
+      "localhost"
+    };
 
-  let reader_pool = PgPoolOptions::new()
-    .connect_with(conn_opts)
-    .await?;
+    let port = if let Some(port) = database_url.port() {
+      port
+    } else {
+      5432
+    };
 
-    Ok(
-      Pool {
-	writer: writer_pool,
-	reader: reader_pool,
-      }
-    )
+    let username = database_url.username();
+    let database = if let Some(mut path) = database_url.path_segments() {
+      path.next().unwrap_or("pr2.db")
+    } else {
+      "pr2.db"
+    };
+
+    let conn_opts = PgConnectOptions::new()
+      .host(host)
+      .port(port)
+      .username(username)
+      .database(database);
+
+    let writer_pool = PgPoolOptions::new()
+      .max_connections(1)
+      .connect_with(conn_opts.clone())
+      .await?;
+
+    let reader_pool = PgPoolOptions::new().connect_with(conn_opts).await?;
+
+    Ok(Pool {
+      writer: writer_pool,
+      reader: reader_pool,
+    })
   }
 }
 
-pub async fn prepare_pg_pool(
-    database_url: SocketAddr,
-) -> Result<Pool, Error> {
-  let pool = Pool::new(database_url).await?;
-  create_extensions(&pool).await?;
-  create_tables(&pool).await?;
-  Ok(pool)
+pub async fn prepare_pg_pool(pool: &Pool) -> Result<(), Error> {
+  if pg_table_exists("'agent'", &pool).await? {
+    create_extensions(&pool).await?;
+    create_tables(&pool).await?;
+  }
+  Ok(())
+}
+
+pub async fn pg_table_exists(tbl: &str, pool: &Pool) -> Result<bool, Error> {
+  let res: types::Exists = sqlx::query_as::<_, types::Exists>(
+    r#"
+select exists (select from pg_tables where schemaname = 'public' and tablename = $1);
+"#,
+  )
+  .bind(tbl)
+  .fetch_one(&pool.writer)
+  .await?;
+  Ok(res.exists)
 }
 
 async fn create_extensions(pool: &Pool) -> Result<(), Error> {
@@ -53,7 +84,8 @@ async fn create_extensions(pool: &Pool) -> Result<(), Error> {
 
   // insert updated_at and created_at columns select
   // trigger_updated_at('<table name>');
-  sqlx::query("
+  sqlx::query(
+    "
 create or replace function set_updated_at()
     returns trigger as
 $$
@@ -62,11 +94,13 @@ begin
     return NEW;
 end;
 $$ language plpgsql;
-")
-.execute(&pool.writer)
-.await?;
+",
+  )
+  .execute(&pool.writer)
+  .await?;
 
-  sqlx::query("
+  sqlx::query(
+    "
 create or replace function trigger_updated_at(tablename regclass)
     returns void as
 $$
@@ -78,9 +112,10 @@ begin
         WHEN (OLD is distinct from NEW)
     EXECUTE FUNCTION set_updated_at();', tablename);
 end;
-$$ language plpgsql;")
-.execute(&pool.writer)
-.await?;
+$$ language plpgsql;",
+  )
+  .execute(&pool.writer)
+  .await?;
   // text collation that sorts text case-insensitively, useful for
   // `UNIQUE` indexes over things like usernames and emails, without
   // needing to remember to do case-conversion.
@@ -89,7 +124,7 @@ create collation if not exists case_insensitive (provider = icu, locale = 'und-u
 ")
 .execute(&pool.writer)
 .await?;
-Ok(())
+  Ok(())
 }
 
 async fn create_types(pool: &Pool) -> Result<(), Error> {
@@ -104,8 +139,8 @@ async fn create_types(pool: &Pool) -> Result<(), Error> {
 }
 
 async fn create_tables(pool: &Pool) -> Result<(), Error> {
-    sqlx::query(
-        "
+  sqlx::query(
+    "
 CREATE TABLE IF NOT EXISTS agent (
     id uuid PRIMARY KEY NOT NULL,
     public_prekey bytea NOT NULL,
@@ -115,12 +150,12 @@ CREATE TABLE IF NOT EXISTS agent (
     last_seen timestamptz NOT NULL
 );
         ",
-    )
-    .execute(&pool.writer)
-    .await?;
+  )
+  .execute(&pool.writer)
+  .await?;
 
-    sqlx::query(
-        "
+  sqlx::query(
+    "
 CREATE TABLE IF NOT EXISTS job (
     id uuid PRIMARY KEY NOT NULL,
     agent_id uuid NOT NULL,
@@ -133,75 +168,81 @@ CREATE TABLE IF NOT EXISTS job (
     payload bytea NOT NULL
 );
         ",
-    )
-    .execute(&pool.writer)
-    .await?;
+  )
+  .execute(&pool.writer)
+  .await?;
 
   sqlx::query("select trigger_updated_at('job');")
     .execute(&pool.writer)
     .await?;
 
   sqlx::query(
-        "
+    "
 CREATE TABLE IF NOT EXISTS job_result (
     result_id uuid PRIMARY KEY NOT NULL,
     job_id uuid NOT NULL,
     result text NOT NULL,
     created_at timestamptz NOT NULL,
     updated_at timestamptz
-);")
-    .execute(&pool.writer)
-    .await?;
+);",
+  )
+  .execute(&pool.writer)
+  .await?;
 
   sqlx::query("select trigger_updated_at('job_result');")
     .execute(&pool.writer)
     .await?;
 
-    Ok(())
+  Ok(())
 }
 
 pub async fn drop_tables(pool: Pool) -> Result<(), Error> {
-  sqlx::query("
+  sqlx::query(
+    "
 select 'drop table if exists \"' || tablename || '\" cascade;' 
   from pg_tables
- where schemaname = 'public';"
+ where schemaname = 'public';",
   )
-    .execute(&pool.writer)
-    .await?;
+  .execute(&pool.writer)
+  .await?;
   Ok(())
 }
 
 pub async fn insert_agent(agent: &types::Agent, pool: &Pool) -> Result<Uuid, Error> {
-  let rec = sqlx::query!(r#"
+  let rec = sqlx::query!(
+    r#"
 insert into agent
 values ($1, $2, $3, $4, $5, $6)
 returning id;
 "#,
-			 agent.id,
-			 agent.public_prekey,
-			 agent.public_prekey_signature,
-			 agent.identity_public_key,
-			 agent.created_at,
-			 agent.last_seen,
+    agent.id,
+    agent.public_prekey,
+    agent.public_prekey_signature,
+    agent.identity_public_key,
+    agent.created_at,
+    agent.last_seen,
   )
-    .fetch_one(&pool.writer)
-    .await?;
+  .fetch_one(&pool.writer)
+  .await?;
   Ok(rec.id)
 }
 
 pub async fn list_agents(pool: &Pool) -> Result<Vec<types::Agent>, Error> {
   sqlx::query_as::<_, types::Agent>("select * from agent order by created_at")
     .fetch_all(&pool.reader)
-    .await.map_err(|e| e.into())
+    .await
+    .map_err(|e| e.into())
 }
 
 pub async fn visit_agent_by_id(id: &Uuid, pool: &Pool) -> Result<(), Error> {
-  sqlx::query!(r#"
+  sqlx::query!(
+    r#"
 update agent set last_seen = $1 where id = $2;
 "#,
-	       Utc::now(),
-	       id
-  ).fetch_one(&pool.writer)
-    .await?;
+    Utc::now(),
+    id
+  )
+  .fetch_one(&pool.writer)
+  .await?;
   Ok(())
 }
