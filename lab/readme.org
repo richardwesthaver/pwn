@@ -2,6 +2,11 @@
 #+DESCRIPTION: resources, tools, other gadgets
 
 * resources
+- [[https://hexed.it/][hexed.it]]
+- [[http://x86asm.net/articles/others/index.html][x86asm.net systems programming]]
+- [[https://cargo-generate.github.io/cargo-generate/index.html][cargo-generate]]
+- [[https://blog.tetrane.com/downloads/Tetrane_PatchGuard_Analysis_RS4_v1.01.pdf][PatchGuard Analysis]]
+- [[https://fruct.org/publications/acm20/files/Ogo.pdf][UEFI BIOS and Intel Management Engine Attack Vectors and Vulnerabilities]]
 - [[https://wiki.osdev.org/UEFI][UEFI - osdev wiki]]
 - [[https://github.com/tianocore/edk2][EDK II]]
 - [[https://uefi.org/][UEFI specs]]

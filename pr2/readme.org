@@ -59,3 +59,10 @@ information and send to c2.
 - State "TODO"       from              [2022-08-09 Tue 17:15]
 postgres SQL
 use sqlx offline mode
+
+* resources
+- [[https://www.emacswiki.org/emacs/widget-demo.el][widget-demo.el]]
+- [[https://docs.rs/tokio-util/latest/tokio_util/index.html][tokio_util]]
+- [[https://docs.rs/sqlx/latest/sqlx/index.html][sqlx]]
+- [[https://github.com/rustrat/rustrat][rustrat]]
+- [[https://github.com/iagox86/dnscat2][dnscat2]]
