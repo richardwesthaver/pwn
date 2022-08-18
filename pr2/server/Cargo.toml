@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["http", "udp"]
-http = ["warp"]
-dns = ["trust-dns-client", "trust-dns-server", "trust-dns-resolver"]
+default = ["all"]
+all = ["udp", "dns", "http"]
 udp = []
+dns = ["trust-dns-client", "trust-dns-server", "trust-dns-resolver"]
+http = ["warp"]
+
 [dependencies]
+clap = { version = "3.2.14", features = ["derive", "env"] }
 proto = { path = "../proto" }
 sqlx = { version = "0.6.0", features = [ "runtime-tokio-rustls", "postgres", "offline", "uuid", "chrono" ] }
 tokio = { version = "1.20.0", features = ["full"] }

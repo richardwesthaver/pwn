@@ -1,17 +1,17 @@
+use clap::Parser;
 use server::{
-  cfg::Cfg,
-  db::{insert_agent, list_agents, pg_table_exists, prepare_pg_pool, types::Agent, Pool},
-  TxService, RxService
+  cfg::{Cfg, TransportType},
+  db::{list_agents, prepare_pg_pool, types::Agent, Pool},
+  RxService, TxService,
 };
-
-use std::sync::{Arc, Mutex};
 use tracing_subscriber::EnvFilter;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   tracing_subscriber::fmt()
     .with_env_filter(EnvFilter::from_default_env())
     .init();
-  let cfg = Cfg::from_env().unwrap();
+  let cfg = Cfg::parse();
 
   // connect to psql
   let tx_pool = Pool::new(&cfg.database_url).await?;
@@ -27,7 +27,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let tx_task = tokio::spawn(async move {
     let tx_srv = TxService::new(cfg.tx_addr, tx_pool);
-    tx_srv.start_http().await.unwrap();
+    if cfg.transport == TransportType::Udp {
+      tx_srv.start_udp().await.unwrap();
+    } else if cfg.transport == TransportType::Dns {
+      tx_srv.start_dns().await.unwrap();
+    } else if cfg.transport == TransportType::Http {
+      tx_srv.start_http().await.unwrap();
+    }
   });
 
   let rx_task = tokio::spawn(async move {

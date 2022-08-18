@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct Exists {
-  pub exists: bool
+  pub exists: bool,
 }
 
 #[derive(Debug, Clone, FromRow)]

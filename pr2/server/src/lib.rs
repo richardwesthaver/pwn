@@ -39,26 +39,25 @@
 
 pub mod cfg;
 pub mod db;
-#[cfg(feature = "dns")]
-pub mod dns;
 pub mod error;
-#[cfg(feature = "http")]
-pub mod http;
+
 #[cfg(feature = "udp")]
 pub mod udp;
+
+#[cfg(feature = "dns")]
+pub mod dns;
+
+#[cfg(feature = "http")]
+pub mod http;
 
 pub use cfg::Cfg;
 pub use db::Pool;
 pub use error::Error;
 
 use bytes::BytesMut;
-// use proto::codec::C2Codec;
-use std::sync::Arc;
-use std::io;
-use std::net::SocketAddr;
+use std::{io, net::SocketAddr, sync::Arc};
 use tokio::net::UdpSocket;
-use tokio_util::udp::UdpFramed;
-use tokio_util::codec::LinesCodec;
+use tokio_util::{codec::LinesCodec, udp::UdpFramed};
 
 #[derive(Clone, Debug)]
 pub struct TxService {
@@ -86,6 +85,7 @@ impl TxService {
     Ok(())
   }
 
+  #[cfg(feature = "udp")]
   pub async fn start_udp(&self) -> Result<(), Error> {
     Ok(())
   }
@@ -99,7 +99,7 @@ pub struct RxService {
 
 impl RxService {
   pub fn new(addr: SocketAddr, pool: Pool) -> RxService {
-    RxService {addr, pool}
+    RxService { addr, pool }
   }
 
   pub async fn start_rx(&self) -> Result<(), Error> {
@@ -111,19 +111,18 @@ impl RxService {
       inf.get_ref().readable().await?;
       let mut buf = &mut BytesMut::new();
       match inf.get_ref().try_recv_buf_from(&mut buf) {
-	Ok((n, _client)) => {
-	  buf.truncate(n);
+        Ok((n, _client)) => {
+          buf.truncate(n);
           log::trace!("GOT {:?}", &buf[..n]);
-	  continue;
-	},
-	Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-	  continue;
-	},
-	Err(e) => {
-	  return Err(e.into());
-	}
+          continue;
+        }
+        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+          continue;
+        }
+        Err(e) => {
+          return Err(e.into());
+        }
       }
     }
-    Ok(())
   }
 }

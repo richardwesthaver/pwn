@@ -2,6 +2,11 @@
 #+DESCRIPTION: resources, tools, other gadgets
 
 * resources
+- [[https://docs.microsoft.com/en-us/windows-hardware/drivers/install/installing-test-certificates][installing windows test certificates]]
+- [[https://docs.microsoft.com/en-us/windows-hardware/drivers/install/installing-test-signed-driver-packages][installing test-signed driver packages]]
+- [[https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/][virtio-win direct downloads]]
+- [[https://developer.microsoft.com/en-us/windows/hardware/][Windows Hardware Dev Center]]
+- [[https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md][virtio-win-pkg-scripts]]
 - [[https://hexed.it/][hexed.it]]
 - [[http://x86asm.net/articles/others/index.html][x86asm.net systems programming]]
 - [[https://cargo-generate.github.io/cargo-generate/index.html][cargo-generate]]

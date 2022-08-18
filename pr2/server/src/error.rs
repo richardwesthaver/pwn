@@ -19,6 +19,7 @@ pub enum Error {
   Conflict(String),
 }
 
+#[cfg(feature = "http")]
 impl warp::reject::Reject for Error {}
 
 impl std::convert::From<sqlx::migrate::MigrateError> for Error {

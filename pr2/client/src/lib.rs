@@ -1,12 +1,11 @@
 pub mod cfg;
 pub mod error;
-pub mod udp;
-use bytes::BytesMut;
+
 pub use error::Error;
-use futures::{Sink, Stream};
-use proto::codec::C2Codec;
+
+use bytes::BytesMut;
 use std::{
-  io::{stdin, Read},
+  io::{stdin, BufRead},
   net::SocketAddr,
 };
 use tokio::net::UdpSocket;
@@ -15,31 +14,34 @@ use tokio_util::{
   udp::UdpFramed,
 };
 
-use proto::packet::Packet;
-
 pub fn get_stdin_data() -> Result<String, Error> {
   let mut buf = String::new();
   stdin().read_line(&mut buf)?;
   Ok(buf)
 }
 
-pub struct Service {
-  socket: SocketAddr,
-  remote: SocketAddr,
+pub struct Service<'a> {
+  input: Box<dyn BufRead + 'a>,
+  client: SocketAddr,
+  server: SocketAddr,
 }
 
-impl Service {
-  pub fn new(socket: SocketAddr, remote: SocketAddr) -> Service {
-    Service { socket, remote }
+impl<'a> Service<'a> {
+  pub fn new<I: BufRead + 'a>(input: I, client: SocketAddr, server: SocketAddr) -> Service<'a> {
+    Service {
+      input: Box::new(input),
+      client,
+      server,
+    }
   }
-  pub async fn start_tx(&self) -> Result<(), Error> {
-    let socket = UdpSocket::bind(self.socket).await?;
+  pub async fn start(&self) -> Result<(), Error> {
+    let socket = UdpSocket::bind(self.client).await?;
     log::info!("client binding to socket {}", socket.local_addr()?);
     let mut inf = UdpFramed::new(socket, LinesCodec::new());
     let mut buf = BytesMut::new();
     while let Ok(line) = get_stdin_data() {
       inf.codec_mut().encode(line, &mut buf)?;
-      inf.get_mut().send_to(&buf, self.remote).await?;
+      inf.get_mut().send_to(&buf, self.server).await?;
     }
     Ok(())
   }

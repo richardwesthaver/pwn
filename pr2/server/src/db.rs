@@ -2,8 +2,8 @@
 use crate::Error;
 use chrono::Utc;
 use sqlx::postgres::*;
-use uuid::Uuid;
 use url::Url;
+use uuid::Uuid;
 
 pub mod types;
 
