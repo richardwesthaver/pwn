@@ -4,44 +4,38 @@ pub mod error;
 pub use error::Error;
 
 use bytes::BytesMut;
-use std::{
-  io::{stdin, BufRead},
-  net::SocketAddr,
-};
+use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio_util::{
   codec::{Decoder, Encoder, LinesCodec},
   udp::UdpFramed,
 };
 
-pub fn get_stdin_data() -> Result<String, Error> {
-  let mut buf = String::new();
-  stdin().read_line(&mut buf)?;
-  Ok(buf)
-}
+use rustyline::Editor;
 
-pub struct Service<'a> {
-  input: Box<dyn BufRead + 'a>,
+pub struct Service {
+  input: Editor<()>,
   client: SocketAddr,
   server: SocketAddr,
 }
 
-impl<'a> Service<'a> {
-  pub fn new<I: BufRead + 'a>(input: I, client: SocketAddr, server: SocketAddr) -> Service<'a> {
-    Service {
-      input: Box::new(input),
+impl Service {
+  pub fn new(client: SocketAddr, server: SocketAddr) -> Result<Service, Error> {
+    Ok(Service {
+      input: Editor::<()>::new()?,
       client,
       server,
-    }
+    })
   }
-  pub async fn start(&self) -> Result<(), Error> {
+  pub async fn start(&mut self) -> Result<(), Error> {
     let socket = UdpSocket::bind(self.client).await?;
     log::info!("client binding to socket {}", socket.local_addr()?);
     let mut inf = UdpFramed::new(socket, LinesCodec::new());
     let mut buf = BytesMut::new();
-    while let Ok(line) = get_stdin_data() {
+    while let Ok(line) = self.input.readline("|| ") {
       inf.codec_mut().encode(line, &mut buf)?;
       inf.get_mut().send_to(&buf, self.server).await?;
+      buf.clear();
     }
     Ok(())
   }

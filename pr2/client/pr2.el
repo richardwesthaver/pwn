@@ -28,68 +28,66 @@
 (defgroup pr2 nil
   "Poor Richard's Pet Rat")
 
-(defcustom pr2-client-port t
-  "Port for pr2-client to connect to. A value of `t' will
-automatically assign a random port in accordance with the
-semantics of `make-network-process' (why not nil??)"
+(defcustom pr2-client-file-path "~/.cargo/bin/pr2-client"
+  "path to the pr2-client binary"
   :group 'pr2)
 
-(defcustom pr2-server-addr [127 0 0 1 9053]
+(defcustom pr2-server-addr "127.0.0.1:9053"
   "socket address for pr2-server"
   :group 'pr2)
 
-(defvar pr2-process nil
-  "The pr2 client process handle.")
+(defconst pr2-client-keywords
+  '("help" "list" "get" "set" "quit"))
 
-(defun pr2-sentinel (proc msg)
-  (when (string= msg "connection broken by remote peer\n")
-    (pr2-log (format "process %s has terminated" proc))))
+(defvar pr2-client-font-lock-keywords
+  (list
+   ;; highlight all opcodes.
+   `(,(concat "\\_<" (regexp-opt pr2-client-keywords) "\\_>") . font-lock-keyword-face))
+  "Additional expressions to highlight in `pr2-client-mode'.")
 
-(defun pr2-log (msg)
-  "If a *pr2* buffer exists, write MSG to it for logging purposes."
-  (if (get-buffer "*pr2*")
-      (with-current-buffer "*pr2*"
-	(goto-char (point-max))
-	(insert (concat msg "\n")))))
+(defvar pr2-client-mode-map
+  (let ((map (nconc (make-sparse-keymap) comint-mode-map)))
+    (define-key map "\t" 'completion-at-point)
+    map)
+  "Basic mode map for `run-pr2-client'")
 
-(defun pr2-filter (proc str)
-  (let (idx)
-    (process-send-string proc msg)
-    (while (string-match "\n" str)
-      (setq idx (1+ idx))
-      (pr2-log (substring msg idx)))))
+(defvar pr2-client-prompt-regexp "|| "
+  "prompt for `run-pr2-client'")
 
-(defun pr2-start nil
-  "start the pr2 client."
+;;;###autoload
+(defun run-pr2-client (&optional addr)
+  "run an inferior instance of pr2-client using remote address
+ADDR. defaults to `pr2-server-addr'"
   (interactive)
-  (unless (process-status "pr2")
-    (make-network-process :name "pr2"
-			  :buffer "*pr2*"
-			  :remote pr2-server-addr
-			  :type 'datagram
-			  :connection-type 'pipe
-			  ;; :coding 'utf-8
-			  :sentinel 'pr2-sentinel
-			  :filter 'pr2-filter
-			  ;; :nowait t
-			  )
-    (message "pr2-client started")))
+  (let* ((prog pr2-client-file-path)
+	 (buffer (comint-check-proc "pr2-client")))
+    ;; pop to *pr2-client* buffer if the process is dead, the buffer
+    ;; is missing or has the wrong mode.
+    (pop-to-buffer-same-window
+     (if (or buffer (not (derived-mode-p 'pr2-client-mode))
+	     (comint-check-proc (current-buffer)))
+	 (get-buffer-create (or buffer "*pr2-client*"))
+       (current-buffer)))
+    ;; create comint process if there is buffer is missing
+    (unless buffer
+      (apply 'make-comint-in-buffer "pr2-client" buffer prog nil (list "-s" (or addr pr2-server-addr)))
+      (pr2-client-mode))))
 
-(defun my-send-cmd (proc str)
-  (if (process-get proc 'my-waiting)
-      (process-put proc 'my-pending (append (process-get proc 'my-pending) (list str)))
-    (process-put proc 'my-waiting t)
-    (process-send-string proc str)))
+(defun pr2-client--init ()
+  "initialize pr2-client"
+  (setq comint-process-echoes t
+	comint-use-prompt-regexp t))
 
-(defun pr2-stop nil
-  "stop the pr2 client."
-  (interactive)
-  (with-current-buffer "*pr2*"
-    (let ((proc (get-buffer-process (current-buffer))))
-      (if proc (delete-process proc)))
-    (set-buffer-modified-p nil)
-    (kill-this-buffer))
-  (message "pr2-client stopped"))
+(define-derived-mode pr2-client-mode comint-mode "pr2-client"
+  "Major mode for `run-pr2-client'
+\\<pr2-client-mode-map>"
+  nil "pr2-client"
+  (setq comint-prompt-read-only t)
+  (set (make-local-variable 'paragraph-separate) "\\'")
+  (set (make-local-variable 'font-lock-defaults) '(pr2-client-font-lock-keywords t))
+  (set (make-local-variable 'paragraph-start) pr2-client-prompt-regexp))
+
+(add-hook 'pr2-client-mode-hook 'pr2-client--init)
 
 (provide 'pr2)
 ;;; pr2.el ends here
