@@ -1,3 +1,4 @@
+//! lib.rs --- pr2-client
 pub mod cfg;
 pub mod error;
 

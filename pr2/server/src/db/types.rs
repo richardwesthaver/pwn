@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use proto::api;
+use proto::api::c2;
 use sqlx::FromRow;
 use std::convert::TryInto;
 use uuid::Uuid;
@@ -23,9 +23,9 @@ pub struct Job {
   pub result_signature: Option<Vec<u8>>,
 }
 
-impl Into<api::Job> for Job {
-  fn into(self) -> api::Job {
-    api::Job {
+impl Into<c2::Job> for Job {
+  fn into(self) -> c2::Job {
+    c2::Job {
       id: self.id,
       agent_id: self.agent_id,
       encrypted_job: self.encrypted_job,
@@ -62,9 +62,9 @@ pub struct Agent {
   pub public_prekey_signature: Vec<u8>,
 }
 
-impl Into<api::Agent> for Agent {
-  fn into(self) -> api::Agent {
-    api::Agent {
+impl Into<c2::Agent> for Agent {
+  fn into(self) -> c2::Agent {
+    c2::Agent {
       id: self.id,
       created_at: self.created_at,
       last_seen: self.last_seen,

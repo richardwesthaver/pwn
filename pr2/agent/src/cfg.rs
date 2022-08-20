@@ -6,7 +6,7 @@ use std::{
 use uuid::Uuid;
 use x25519_dalek::{x25519, X25519_BASEPOINT_BYTES};
 
-pub const AGENT_CONFIG_FILE: &str = "agent.json";
+pub const AGENT_CFG_FILE: &str = "agent.json";
 #[cfg(target_os = "windows")]
 pub const AGENT_INSTALL_FILE: &str = "agent.exe";
 #[cfg(not(target_os = "windows"))]
@@ -16,7 +16,7 @@ pub const CLIENT_IDENTITY_PUBLIC_KEY: &str = "xQ6gstFLtTbDC06LDb5dAQap+fXVG45BnR
 pub const INSTANCE_ID: &str = "agent";
 
 #[derive(Debug)]
-pub struct Config {
+pub struct Cfg {
     pub agent_id: Uuid,
     pub identity_public_key: ed25519_dalek::PublicKey,
     pub identity_private_key: ed25519_dalek::SecretKey,
@@ -25,10 +25,10 @@ pub struct Config {
     pub client_identity_public_key: ed25519_dalek::PublicKey,
 }
 
-impl TryFrom<SerializedConfig> for Config {
+impl TryFrom<SerializedCfg> for Cfg {
     type Error = Error;
 
-    fn try_from(conf: SerializedConfig) -> Result<Config, Self::Error> {
+    fn try_from(conf: SerializedCfg) -> Result<Cfg, Self::Error> {
         let agent_id = conf.agent_id;
 
         let identity_private_key =
@@ -42,7 +42,7 @@ impl TryFrom<SerializedConfig> for Config {
         let client_identity_public_key =
             ed25519_dalek::PublicKey::from_bytes(&client_public_key_bytes)?;
 
-        Ok(Config {
+        Ok(Cfg {
             agent_id,
             identity_public_key,
             identity_private_key,
@@ -53,9 +53,9 @@ impl TryFrom<SerializedConfig> for Config {
     }
 }
 
-impl Into<SerializedConfig> for &Config {
-    fn into(self) -> SerializedConfig {
-        SerializedConfig {
+impl Into<SerializedCfg> for &Cfg {
+    fn into(self) -> SerializedCfg {
+        SerializedCfg {
             agent_id: self.agent_id,
             identity_private_key: self.identity_private_key.to_bytes(),
             private_prekey: self.private_prekey,
@@ -64,18 +64,18 @@ impl Into<SerializedConfig> for &Config {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct SerializedConfig {
+pub struct SerializedCfg {
     pub agent_id: Uuid,
     pub identity_private_key: [u8; ed25519_dalek::SECRET_KEY_LENGTH],
     pub private_prekey: [u8; 32],
 }
 
-pub fn get_agent_config_file_path() -> Result<PathBuf, Error> {
-    let mut config_file = get_agent_directory()?;
+pub fn get_agent_cfg_file_path() -> Result<PathBuf, Error> {
+    let mut cfg_file = get_agent_directory()?;
 
-    config_file.push(AGENT_CONFIG_FILE);
+    cfg_file.push(AGENT_CFG_FILE);
 
-    Ok(config_file)
+    Ok(cfg_file)
 }
 
 pub fn get_agent_directory() -> Result<PathBuf, Error> {

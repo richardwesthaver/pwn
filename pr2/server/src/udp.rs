@@ -1,4 +1,4 @@
-use proto::{codec::C2Codec, MTU};
+use proto::{codec::c2::C2Codec, MTU};
 use tokio::net::UdpSocket;
 use tokio_util::udp::UdpFramed;
 
