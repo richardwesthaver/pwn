@@ -1,7 +1,7 @@
 //! http.rs --- http/s frontend interface
 //use proto::api::{ServerCoder, Ack};
 use crate::TxService;
-use proto::api::c2;
+use proto::api::Response;
 use serde::de::DeserializeOwned;
 use std::{convert::Infallible, sync::Arc};
 use warp::{http::StatusCode, Filter, Rejection, Reply};
@@ -34,7 +34,7 @@ pub async fn handle_error(rejection: Rejection) -> std::result::Result<impl Repl
     err = crate::Error::Internal("".to_string());
   }
 
-  let res = c2::Response::<()>::Error(err.to_string());
+  let res = Response::<()>::Error(err.to_string());
   let res_json = warp::reply::json(&res);
   Ok(warp::reply::with_status(res_json, status))
 }
@@ -75,7 +75,7 @@ pub fn routes(
 
 pub async fn index() -> Result<impl warp::Reply, Rejection> {
   let data = "welcome stranger";
-  let res = c2::Response::ok(data);
+  let res = Response::ok(data);
   let res_json = warp::reply::json(&res);
   Ok(warp::reply::with_status(res_json, StatusCode::OK))
 }

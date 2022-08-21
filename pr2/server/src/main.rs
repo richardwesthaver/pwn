@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let rx_task = tokio::spawn(async move {
     let rx_srv = RxService::new(cfg.rx_addr, rx_pool);
-    rx_srv.start_rx().await.unwrap();
+    rx_srv.start_rx().await.expect("rx_thread terminated");
   });
 
   tokio::try_join!(rx_task, tx_task,)?;

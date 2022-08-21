@@ -1,21 +1,35 @@
-use serde::{Serialize, Deserialize};
-use crate::Error;
+use crate::{serialize, Error};
+use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[repr(u8)]
 pub enum OpCode {
   GET = 0x00,
   SET = 0x01,
-
   QUERY = 0x10,
-  
   START = 0x20,
   STOP = 0x21,
   SLEEP = 0x22,
-
   SUSET = 0xF0,
   SUGET = 0xF1,
   SHUTDOWN = 0xFF,
+}
+
+impl std::fmt::Display for OpCode {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::GET => f.write_str("GET"),
+      Self::SET => f.write_str("SET"),
+      Self::QUERY => f.write_str("QUERY"),
+      Self::START => f.write_str("START"),
+      Self::STOP => f.write_str("STOP"),
+      Self::SLEEP => f.write_str("SLEEP"),
+      Self::SUSET => f.write_str("SUSET"),
+      Self::SUGET => f.write_str("SUGET"),
+      Self::SHUTDOWN => f.write_str("SHUTDOWN"),
+    }
+  }
 }
 
 impl TryFrom<u8> for OpCode {
@@ -52,6 +66,24 @@ impl Into<u8> for OpCode {
   }
 }
 
+impl FromStr for OpCode {
+  type Err = Error;
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    match s.to_uppercase().as_str() {
+      "GET" => Ok(Self::GET),
+      "SET" => Ok(Self::SET),
+      "QUERY" => Ok(Self::QUERY),
+      "START" => Ok(Self::START),
+      "STOP" => Ok(Self::STOP),
+      "SLEEP" => Ok(Self::SLEEP),
+      "SUSET" => Ok(Self::SUSET),
+      "SUGET" => Ok(Self::SUGET),
+      "SHUTDOWN" => Ok(Self::SHUTDOWN),
+      e => Err(Error::CodingError(e.to_string())),
+    }
+  }
+}
+
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[repr(u8)]
 pub enum ValType {
@@ -61,43 +93,77 @@ pub enum ValType {
   Enc,
 }
 
+impl std::fmt::Display for ValType {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::Str => f.write_str("str"),
+      Self::Byt => f.write_str("byt"),
+      Self::Key => f.write_str("key"),
+      Self::Enc => f.write_str("enc"),
+    }
+  }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Val{
-  pub typ: ValType,
+pub struct Val {
+  pub top: ValType,
   pub len: u32,
   pub val: Vec<u8>,
 }
+
 impl From<Vec<u8>> for Val {
   fn from(val: Vec<u8>) -> Self {
-    Val{ typ: ValType::Byt, len: val.len() as u32, val }
+    Val {
+      top: ValType::Byt,
+      len: val.len() as u32,
+      val,
+    }
   }
 }
 
 impl From<&[u8]> for Val {
   fn from(v: &[u8]) -> Self {
-    Val{ typ: ValType::Byt, len: v.len() as u32, val: v.to_vec() }
+    Val {
+      top: ValType::Byt,
+      len: v.len() as u32,
+      val: v.to_vec(),
+    }
   }
 }
 
+impl std::fmt::Display for Val {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.write_fmt(format_args!(
+      "[top: {}, len: {}, val: {:?}]",
+      self.top, self.len, self.val
+    ))
+  }
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
-  pub typ: OpCode,
+  /// type/OpCode
+  top: OpCode,
+  /// total Message length
   len: u32,
-  pub val: Val,
+  /// Value container
+  val: Val,
 }
 
 impl Message {
-  pub fn new(typ: OpCode, len: u32, val: Val) -> Message {
-    Message { typ, len, val }
+  pub fn new(top: OpCode, len: u32, val: Val) -> Message {
+    Message { top, len, val }
   }
   pub fn to_bytes(&self) -> Result<Vec<u8>, Error> {
-    match bincode::serialize(&self) {
-      Ok(res) => Ok(res),
-      Err(e) => Err(e.into())
-    }
+    let top = u8::to_le_bytes(self.top() as u8);
+    let len = u32::to_le_bytes(self.len());
+    let mut bytes = Vec::with_capacity(5 + self.len() as usize);
+    bytes.extend_from_slice(&top);
+    bytes.extend_from_slice(&len);
+    bytes.extend_from_slice(&serialize(&self.val)?);
+    Ok(bytes)
   }
-  pub fn typ(&self) -> OpCode {
-    self.typ
+  pub fn top(&self) -> OpCode {
+    self.top
   }
   pub fn len(&self) -> u32 {
     self.len
@@ -105,8 +171,8 @@ impl Message {
   pub fn val(&self) -> &Val {
     &self.val
   }
-  pub fn with_typ(mut self, typ: OpCode) -> Self {
-    self.typ = typ;
+  pub fn with_top(mut self, top: OpCode) -> Self {
+    self.top = top;
     self
   }
   pub fn with_len(mut self, len: u32) -> Self {
@@ -116,5 +182,14 @@ impl Message {
   pub fn with_val(mut self, val: Val) -> Self {
     self.val = val;
     self
+  }
+}
+
+impl std::fmt::Display for Message {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.write_fmt(format_args!(
+      "TOP: {}, LEN: {}, VAL: {}",
+      self.top, self.len, self.val
+    ))
   }
 }

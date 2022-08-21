@@ -9,6 +9,7 @@ all = ["udp", "dns", "http"]
 udp = []
 dns = ["trust-dns-client", "trust-dns-server", "trust-dns-resolver"]
 http = ["warp"]
+#smtp,imap,pop3
 
 [dependencies]
 clap = { version = "3.2.14", features = ["derive", "env"] }

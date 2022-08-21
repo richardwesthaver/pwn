@@ -83,6 +83,7 @@ impl std::convert::From<proto::Error> for Error {
     match err {
       proto::Error::EncryptionError(s) => Error::Internal(s),
       proto::Error::SerializationError(s) => Error::Internal(s),
+      proto::Error::CodingError(s) => Error::Internal(s),
     }
   }
 }

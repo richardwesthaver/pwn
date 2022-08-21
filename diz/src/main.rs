@@ -23,7 +23,8 @@ fn main() {
         .build()
         .expect("Failed to create Capstone object");
 
-    let insns = cs.disasm_all(X86_CODE, 0x1000)
+    let insns = cs
+        .disasm_all(X86_CODE, 0x1000)
         .expect("Failed to disassemble");
     println!("Found {} instructions", insns.len());
     for i in insns.as_ref() {

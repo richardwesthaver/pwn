@@ -1,7 +1,6 @@
 use crate::{
-  Error,
-  deserialize,
-  api::op::{OpCode, Message, Val},
+  api::op::{Message, OpCode, Val},
+  deserialize, Error,
 };
 use bytes::{Buf, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
@@ -10,18 +9,18 @@ use tokio_util::codec::{Decoder, Encoder};
 pub const MAX_FRAME_SIZE: usize = 120 * 1024 * 1024;
 
 /// OP <--> C2 codec driver
-pub struct OpCodec {
-
-}
+#[derive(Copy, Clone, Debug)]
+pub struct OpCodec {}
 
 impl Encoder<Message> for OpCodec {
   type Error = Error;
   fn encode(&mut self, item: Message, dst: &mut BytesMut) -> Result<(), Self::Error> {
     // protect from DoS
     if item.len() as usize > MAX_FRAME_SIZE {
-      return Err(Error::CodingError(
-	format!("frame of len {} is too large.", item.len()),
-	))
+      return Err(Error::CodingError(format!(
+        "frame of len {} is too large.",
+        item.len()
+      )));
     }
     let bytes = item.to_bytes()?;
     dst.extend_from_slice(&bytes);
@@ -45,15 +44,14 @@ impl Decoder for OpCodec {
       // not enough data to read len (u32)
       return Ok(None);
     }
-    let mut len_bs = [0u8;4];
+    let mut len_bs = [0u8; 4];
     len_bs.copy_from_slice(&src[1..5]);
     let len = u32::from_le_bytes(len_bs);
-
-    if len as usize > MAX_FRAME_SIZE {
-      return Err(
-	Error::CodingError(
-	  format!("frame of len {} is too large.", len)
-      ));
+    if (len + 5) as usize > MAX_FRAME_SIZE {
+      return Err(Error::CodingError(format!(
+        "frame of len {} is too large.",
+        len
+      )));
     }
 
     if src.len() < 5 + len as usize {
@@ -65,9 +63,10 @@ impl Decoder for OpCodec {
     }
 
     // retrieve the val and advance buffer past this frame.
-    let val: Val = deserialize(&src[5..5 + len as usize])?;
+    //    let val: Val = deserialize(&src[5..5 + len as usize])?;
+    let val: Val = deserialize(&src)?;
     src.advance(5 + len as usize);
-    
+
     Ok(Some(Message::new(op_code, len, val)))
   }
 }

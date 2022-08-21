@@ -5,41 +5,13 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use uuid::Uuid;
 
-pub trait ClientCoder {
-  fn tx_ack() -> Ack;
-  fn tx_syn() -> Syn;
-  fn tx_register() -> RegisterAgent;
-  fn rx_job() -> JobPayload;
-  fn tx_job_result() -> UpdateJobResult;
-}
-
-pub trait ServerCoder {
-  fn tx_ack() -> Ack;
-  fn tx_job() -> Job;
-  fn rx_register() -> AgentRegistered;
-  fn rx_job_result() -> JobResult;
-}
-
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Syn(u16);
+pub struct Syn;
+
+type A = u16;
+type AV = Vec<A>;
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Ack(u16);
-
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Response<T: Serialize> {
-  Data(T),
-  Error(String),
-}
-
-impl<T: Serialize> Response<T> {
-  pub fn ok(data: T) -> Response<T> {
-    return Response::Data(data);
-  }
-  pub fn err<E: std::error::Error>(err: E) -> Response<T> {
-    return Response::Error(err.to_string());
-  }
-}
+pub struct Ack(pub AV);
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RegisterAgent {

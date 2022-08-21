@@ -34,3 +34,9 @@ impl From<rustyline::error::ReadlineError> for Error {
     Error::Internal(err.to_string())
   }
 }
+
+impl From<proto::Error> for Error {
+  fn from(err: proto::Error) -> Self {
+    Error::Internal(err.to_string())
+  }
+}

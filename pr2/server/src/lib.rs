@@ -54,11 +54,17 @@ pub use cfg::Cfg;
 pub use db::Pool;
 pub use error::Error;
 
+use proto::codec::OpCodec;
+
 use bytes::BytesMut;
 use std::{io, net::SocketAddr, sync::Arc};
 use tokio::net::UdpSocket;
-use tokio_util::{codec::LinesCodec, udp::UdpFramed};
+use tokio_util::{
+  codec::{Decoder, Encoder},
+  udp::UdpFramed,
+};
 
+/// The server Frontend
 #[derive(Clone, Debug)]
 pub struct TxService {
   addr: SocketAddr,
@@ -73,7 +79,7 @@ impl TxService {
   #[cfg(feature = "http")]
   pub async fn start_http(self) -> Result<(), Error> {
     let addr = self.addr;
-    log::info!("http tx_service binding to: {}", &addr);
+    log::info!("http tx_service listening on: {}", &addr);
     let app_state = Arc::new(http::AppState::new(self));
     let routes = http::routes(app_state);
     warp::serve(routes).bind(addr).await;
@@ -82,15 +88,20 @@ impl TxService {
 
   #[cfg(feature = "dns")]
   pub async fn start_dns(&self) -> Result<(), Error> {
+    let addr = self.addr;
+    log::info!("dns tx_service listening on: {}", &addr);
     Ok(())
   }
 
   #[cfg(feature = "udp")]
   pub async fn start_udp(&self) -> Result<(), Error> {
+    let addr = self.addr;
+    log::info!("udp tx_service listening on: {}", &addr);
     Ok(())
   }
 }
 
+/// The server Backend
 #[derive(Debug)]
 pub struct RxService {
   addr: SocketAddr,
@@ -105,15 +116,26 @@ impl RxService {
   pub async fn start_rx(&self) -> Result<(), Error> {
     log::info!("udp rx_service binding on: {}", self.addr);
     let socket = UdpSocket::bind(self.addr).await?;
-    let inf = UdpFramed::new(socket, LinesCodec::new());
+    let mut inf = UdpFramed::new(socket, OpCodec {});
     loop {
+      let mut buf = &mut BytesMut::new();
       // wait for socket to be readable
       inf.get_ref().readable().await?;
-      let mut buf = &mut BytesMut::new();
-      match inf.get_ref().try_recv_buf_from(&mut buf) {
-        Ok((n, _client)) => {
+      match inf.get_mut().try_recv_buf_from(&mut buf) {
+        Ok((n, client)) => {
           buf.truncate(n);
-          log::trace!("GOT {:?}", &buf[..n]);
+          log::trace!("RX: {:?} FROM {}", &buf[..n], &client);
+          match inf.codec_mut().decode(&mut buf) {
+            Ok(Some(m)) => {
+              log::info!("processing message: {m}")
+            }
+            Ok(None) => continue,
+            // FIXME
+            Err(e) => {
+              log::error!("error during decode: {}", e);
+              continue;
+            }
+          }
           continue;
         }
         Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {

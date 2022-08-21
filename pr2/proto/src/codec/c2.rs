@@ -9,9 +9,8 @@
 //! The 'MAX_FRAME_SIZE' constant for c2 Packet sizes is also exported here.
 
 use crate::{
-  Error,
-  deserialize,
   api::c2::{EncryptedData, Packet},
+  deserialize, Error,
 };
 use bytes::{Buf, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
@@ -26,9 +25,10 @@ impl Encoder<Packet> for C2Codec {
   fn encode(&mut self, item: Packet, dst: &mut BytesMut) -> Result<(), Self::Error> {
     // ensure our packet is less than MAX_FRAME_SIZE
     if item.len() as usize > MAX_FRAME_SIZE {
-      return Err(Error::CodingError(
-        format!("frame of len {} is too large.", item.len()),
-      ));
+      return Err(Error::CodingError(format!(
+        "frame of len {} is too large.",
+        item.len()
+      )));
     }
 
     let bytes = item.to_bytes()?;

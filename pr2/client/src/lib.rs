@@ -1,16 +1,17 @@
 //! lib.rs --- pr2-client
+
 pub mod cfg;
 pub mod error;
+pub mod parser;
 
 pub use error::Error;
+
+use proto::codec::OpCodec;
 
 use bytes::BytesMut;
 use std::net::SocketAddr;
 use tokio::net::UdpSocket;
-use tokio_util::{
-  codec::{Decoder, Encoder, LinesCodec},
-  udp::UdpFramed,
-};
+use tokio_util::{codec::Encoder, udp::UdpFramed};
 
 use rustyline::Editor;
 
@@ -31,11 +32,18 @@ impl Service {
   pub async fn start(&mut self) -> Result<(), Error> {
     let socket = UdpSocket::bind(self.client).await?;
     log::info!("client binding to socket {}", socket.local_addr()?);
-    let mut inf = UdpFramed::new(socket, LinesCodec::new());
+    let mut inf = UdpFramed::new(socket, OpCodec {});
     let mut buf = BytesMut::new();
     while let Ok(line) = self.input.readline("|| ") {
-      inf.codec_mut().encode(line, &mut buf)?;
-      inf.get_mut().send_to(&buf, self.server).await?;
+      match parser::parse_line(&line) {
+        Ok(m) => {
+          inf.codec_mut().encode(m, &mut buf)?;
+          inf.get_mut().send_to(&buf, self.server).await?;
+        }
+        Err(e) => {
+          eprintln!("error: {e}");
+        }
+      }
       buf.clear();
     }
     Ok(())
