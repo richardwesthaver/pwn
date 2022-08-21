@@ -11,8 +11,8 @@ pub enum OpCode {
   START = 0x20,
   STOP = 0x21,
   SLEEP = 0x22,
-  SUSET = 0xF0,
-  SUGET = 0xF1,
+  SUGET = 0xF0,
+  SUSET = 0xF1,
   SHUTDOWN = 0xFF,
 }
 
@@ -25,8 +25,8 @@ impl std::fmt::Display for OpCode {
       Self::START => f.write_str("START"),
       Self::STOP => f.write_str("STOP"),
       Self::SLEEP => f.write_str("SLEEP"),
-      Self::SUSET => f.write_str("SUSET"),
-      Self::SUGET => f.write_str("SUGET"),
+      Self::SUGET => f.write_str("SUSET"),
+      Self::SUSET => f.write_str("SUGET"),
       Self::SHUTDOWN => f.write_str("SHUTDOWN"),
     }
   }
@@ -42,8 +42,8 @@ impl TryFrom<u8> for OpCode {
       0x20 => Ok(Self::START),
       0x21 => Ok(Self::STOP),
       0x22 => Ok(Self::SLEEP),
-      0xF0 => Ok(Self::SUSET),
-      0xF1 => Ok(Self::SUGET),
+      0xF0 => Ok(Self::SUGET),
+      0xF1 => Ok(Self::SUSET),
       0xFF => Ok(Self::SHUTDOWN),
       e => Err(Error::CodingError(format!("invalid op_code: {}", e))),
     }
@@ -59,8 +59,8 @@ impl Into<u8> for OpCode {
       Self::START => 0x20,
       Self::STOP => 0x21,
       Self::SLEEP => 0x22,
-      Self::SUSET => 0xF0,
-      Self::SUGET => 0xF1,
+      Self::SUGET => 0xF0,
+      Self::SUSET => 0xF1,
       Self::SHUTDOWN => 0xFF,
     }
   }
@@ -76,8 +76,8 @@ impl FromStr for OpCode {
       "START" => Ok(Self::START),
       "STOP" => Ok(Self::STOP),
       "SLEEP" => Ok(Self::SLEEP),
-      "SUSET" => Ok(Self::SUSET),
-      "SUGET" => Ok(Self::SUGET),
+      "SUSET" => Ok(Self::SUGET),
+      "SUGET" => Ok(Self::SUSET),
       "SHUTDOWN" => Ok(Self::SHUTDOWN),
       e => Err(Error::CodingError(e.to_string())),
     }
