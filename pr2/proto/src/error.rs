@@ -10,6 +10,8 @@ pub enum Error {
   EncryptionError(String),
   #[error("{0}")]
   SerializationError(String),
+  #[error("{0}")]
+  CodingError(String),
 }
 
 impl From<AeadError> for Error {
@@ -21,5 +23,11 @@ impl From<AeadError> for Error {
 impl From<BincodeError> for Error {
   fn from(err: BincodeError) -> Error {
     Error::SerializationError(err.to_string())
+  }
+}
+
+impl From<std::io::Error> for Error {
+  fn from(err: std::io::Error) -> Self {
+    Error::CodingError(err.to_string())
   }
 }

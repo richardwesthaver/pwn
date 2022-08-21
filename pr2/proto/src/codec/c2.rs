@@ -1,27 +1,37 @@
+//! codec/c2.rs --- c2 encoder/decoder
+
+//! The C2Codec is used to encode and decode Packets from a byte
+//! stream via the 'encode' and 'decode' methods.
+//!
+//! Currently there are no other methods and no state is maintained by
+//! this type.
+//!
+//! The 'MAX_FRAME_SIZE' constant for c2 Packet sizes is also exported here.
+
 use crate::{
+  Error,
   deserialize,
-  packet::{EncryptedData, Packet},
+  api::c2::{EncryptedData, Packet},
 };
 use bytes::{Buf, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
-// 8mb
+/// 8mb
 pub const MAX_FRAME_SIZE: usize = 8 * 1024 * 1024;
 
 pub struct C2Codec {}
 
 impl Encoder<Packet> for C2Codec {
-  type Error = std::io::Error;
+  type Error = Error;
   fn encode(&mut self, item: Packet, dst: &mut BytesMut) -> Result<(), Self::Error> {
     // ensure our packet is less than MAX_FRAME_SIZE
     if item.len() as usize > MAX_FRAME_SIZE {
-      return Err(std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
+      return Err(Error::CodingError(
         format!("frame of len {} is too large.", item.len()),
       ));
     }
 
-    let bytes = item.to_bytes();
+    let bytes = item.to_bytes()?;
     dst.extend_from_slice(&bytes);
     Ok(())
   }

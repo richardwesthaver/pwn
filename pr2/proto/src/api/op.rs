@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::Error;
-#[derive(Debug, Serialize, Deserialize)]
+
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[repr(u8)]
 pub enum OpCode {
   GET = 0x00,
@@ -17,17 +18,50 @@ pub enum OpCode {
   SHUTDOWN = 0xFF,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl TryFrom<u8> for OpCode {
+  type Error = Error;
+  fn try_from(b: u8) -> Result<Self, Error> {
+    match b {
+      0x00 => Ok(Self::GET),
+      0x01 => Ok(Self::SET),
+      0x10 => Ok(Self::QUERY),
+      0x20 => Ok(Self::START),
+      0x21 => Ok(Self::STOP),
+      0x22 => Ok(Self::SLEEP),
+      0xF0 => Ok(Self::SUSET),
+      0xF1 => Ok(Self::SUGET),
+      0xFF => Ok(Self::SHUTDOWN),
+      e => Err(Error::CodingError(format!("invalid op_code: {}", e))),
+    }
+  }
+}
+
+impl Into<u8> for OpCode {
+  fn into(self) -> u8 {
+    match self {
+      Self::GET => 0x00,
+      Self::SET => 0x01,
+      Self::QUERY => 0x10,
+      Self::START => 0x20,
+      Self::STOP => 0x21,
+      Self::SLEEP => 0x22,
+      Self::SUSET => 0xF0,
+      Self::SUGET => 0xF1,
+      Self::SHUTDOWN => 0xFF,
+    }
+  }
+}
+
+#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[repr(u8)]
 pub enum ValType {
   Str,
   Byt,
   Key,
   Enc,
-  
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Val{
   pub typ: ValType,
   pub len: u32,
@@ -48,7 +82,7 @@ impl From<&[u8]> for Val {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
   pub typ: OpCode,
-  pub len: u32,
+  len: u32,
   pub val: Val,
 }
 
@@ -62,15 +96,24 @@ impl Message {
       Err(e) => Err(e.into())
     }
   }
-  pub fn typ(mut self, typ: OpCode) -> Self {
+  pub fn typ(&self) -> OpCode {
+    self.typ
+  }
+  pub fn len(&self) -> u32 {
+    self.len
+  }
+  pub fn val(&self) -> &Val {
+    &self.val
+  }
+  pub fn with_typ(mut self, typ: OpCode) -> Self {
     self.typ = typ;
     self
   }
-  pub fn len(mut self, len: u32) -> Self {
+  pub fn with_len(mut self, len: u32) -> Self {
     self.len = len;
     self
   }
-  pub fn val(mut self, val: Val) -> Self {
+  pub fn with_val(mut self, val: Val) -> Self {
     self.val = val;
     self
   }

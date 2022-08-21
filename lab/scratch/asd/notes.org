@@ -1,0 +1,32 @@
+#+begin_src txt
+      Key lines: T'R'A'N'S'I'E'N'T'R'E'S'O'L'U'T'I'O'N;
+      C'O'M'P'L'E'X'P'R'O'E'N'V'E'L'O'P'E;
+      C'O'M'P'L'E'X'P'R'O'F'O'R'M'A'N'T'S;
+      F'L'U'C'T'U'A'T'I'O'N'T'E'X'T'U'R'E;
+      G'R'A'N'U'L'A'R'I'T'Y'T'E'X'T'U'R'E;
+      L'A'U'N'C'H'Q'U'A'N'T'I'S'A'T'I'O'N;
+      T'R'A'N'S'I'T'I'O'N'E'N'E'R'G'I'E'S;
+      M'E'A'N'P'R'O'B'A'B'I'L'I'T'I'E'S;
+      T'R'A'N'S'I'E'N'T'E'N'V'E'L'O'P'E;
+      T'R'A'N'S'I'E'N'T'L'O'O'P'M'O'D'E;
+      G'R'A'N'U'L'A'R'I'T'Y'T'O'N'E'S;
+      M'A'R'K'E'R'S'G'E'N'E'R'A'T'E'D; O'R'I'G'I'N'A'L'F'I'L'E'S'I'Z'E;
+      H'I'D'D'E'N'L'O'O'P'S'T'A'R'T; O'V'E'R'V'I'E'W'V'E'R'S'I'O'N;
+      T'R'A'N'S'I'E'N'T'V'A'L'U'E'S; B'E'A'T'T'R'A'C'K'S'T'A'T'E;
+      V'E'L'O'C'I'T'Y'A'M'O'U'N'T; C'Y'C'L'E'E'N'E'R'G'I'E'S;
+      H'A'S'U'S'E'R'O'N'S'E'T'S; H'I'D'D'E'N'L'O'O'P'E'N'D;
+      T'I'M'E'S'I'G'N'A'T'U'R'E; TIMESIGNATUREDENOMINATOR;
+      L'A'S'T'I'N'D'I'C'E'S'5; REMOTEABLETIMESIGNATURE;
+      S'A'M'P'L'E'O'F'F'S'E'T; S'A'M'P'L'E'V'O'L'U'M'E;
+      TIMESIGNATURENUMERATOR; D'E'N'O'M'I'N'A'T'O'R; E'X'T'R'A'L'E'N'G'T'H;
+      I'N'V'N'O'T'E'L'E'N'S; P'I'T'C'H'C'O'A'R'S'E; W'A'R'P'M'A'R'K'E'R'S;
+      C'O'L'O'R'I'N'D'E'X; I'N'I'T'I'A'L'B'P'M; I'S'V'O'L'A'T'I'L'E;
+      L'A'S'T'I'N'T'E'R'S; L'A'U'N'C'H'M'O'D'E; P'I'T'C'H'M'A'R'K'S;
+      P'O'S'I'T'I'O'N'S'5; T'O'N'A'L'I'T'I'E'S; N'E'X'T'B'E'A'T'S;
+      N'U'M'E'R'A'T'O'R; O'U'T'M'A'R'K'E'R; P'I'T'C'H'F'I'N'E;
+      REMOTEABLEDOUBLE; REMOTEABLESTRING; I'S'W'A'R'P'E'D; REMOTEABLEARRAY;
+      W'A'R'P'M'O'D'E; BEATTRACKSTATE; REMOTEABLEBOOL; REMOTEABLEENUM;
+      REMOTEABLELIST; REMOTEABLEINT; E'N'E'R'G'Y; L'O'O'P'O'N; ONSETARRAY;
+      ONSETEVENT; PITCHMARKS; SAMPLEDATA; I'S'S'E'T; USERFLOAT; B'P'M'S;
+      F'A'D'E; L'O'C'K; N'A'M'E; S'Y'N'C; ONSETS; H'I'Q
+#+end_src

@@ -1,4 +1,15 @@
-//! crypto.rs ---
+//! crypto.rs --- cryptographic primitives
+
+//! NOTE: Our encryption scheme is focused on c2 <--> agent comms,
+//! client <--> c2 comms are unencrypted.
+//!
+//! c2 is started with a 32-byte string (base64 encoded) which is used
+//! as the server's 'PublicKey' and shared with new agents.
+//!
+//! Agents are then able to register themselves with the c2 by using
+//! their own keys, and secure further connections by negotiating a
+//! 'SharedKey'.
+
 use crate::error::*;
 use chacha20poly1305::{aead::Aead, Key, KeyInit, XChaCha20Poly1305, XNonce};
 use serde::{Deserialize, Serialize};

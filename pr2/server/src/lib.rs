@@ -1,5 +1,5 @@
-//! lib.rs --- pr2-server
-//!
+//! lib.rs --- server
+
 //! Not exactly the most elegant design, but it gets the job
 //! done. This is the server component of Poor Richard's Pet
 //! Rat.

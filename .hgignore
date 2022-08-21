@@ -1,4 +1,2 @@
-^target/
+glob:target/
 glob:Cargo.lock
-glob:.#*
-glob:*.*~
