@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     rx_srv.start_rx().await.expect("rx_thread terminated");
   });
 
-  tokio::try_join!(rx_task, tx_task,)?;
+  tokio::try_join!(rx_task, tx_task)?;
   log::info!("shutting down..");
   Ok(())
 }

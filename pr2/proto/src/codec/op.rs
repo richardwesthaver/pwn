@@ -1,8 +1,8 @@
 use crate::{
-  api::op::{Message, OpCode, Val},
-  deserialize, Error,
+  Error,
+  api::op::{Message, OpCode},
 };
-use bytes::{Buf, BytesMut};
+use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
 /// 120mb
@@ -33,7 +33,7 @@ impl Decoder for OpCodec {
   type Error = Error;
   fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
     if src.len() < 1 {
-      // not enough data to read typ (u8)
+      // not enough data to read top (u8)
       return Ok(None);
     }
 
@@ -47,26 +47,25 @@ impl Decoder for OpCodec {
     let mut len_bs = [0u8; 4];
     len_bs.copy_from_slice(&src[1..5]);
     let len = u32::from_le_bytes(len_bs);
-    if (len + 5) as usize > MAX_FRAME_SIZE {
+    if len as usize > MAX_FRAME_SIZE {
       return Err(Error::CodingError(format!(
         "frame of len {} is too large.",
         len
       )));
     }
 
-    if src.len() < 5 + len as usize {
+    if src.len() < len as usize {
       // full frame hasn't been received yet
       //
       // reserve extra space in rx_buffer
-      src.reserve((5 + len - src.len() as u32) as usize);
+      //
+      // TODO: better buffer management strategy
+      src.reserve((len - src.len() as u32) as usize);
       return Ok(None);
     }
 
-    // retrieve the val and advance buffer past this frame.
-    //    let val: Val = deserialize(&src[5..5 + len as usize])?;
-    let val: Val = deserialize(&src)?;
-    src.advance(5 + len as usize);
-
-    Ok(Some(Message::new(op_code, len, val)))
+    // src.advance(len as usize);
+    //    let val = &src[..len as usize];
+    Ok(Some(Message::new(op_code, len, &src[5..])))
   }
 }

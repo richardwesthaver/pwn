@@ -1,7 +1,8 @@
-use crate::{serialize, Error};
+use crate::Error;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
+/// OpCodes are serialized as a single byte
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 #[repr(u8)]
 pub enum OpCode {
@@ -84,29 +85,8 @@ impl FromStr for OpCode {
   }
 }
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
-#[repr(u8)]
-pub enum ValType {
-  Str,
-  Byt,
-  Key,
-  Enc,
-}
-
-impl std::fmt::Display for ValType {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    match self {
-      Self::Str => f.write_str("str"),
-      Self::Byt => f.write_str("byt"),
-      Self::Key => f.write_str("key"),
-      Self::Enc => f.write_str("enc"),
-    }
-  }
-}
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Val {
-  pub top: ValType,
   pub len: u32,
   pub val: Vec<u8>,
 }
@@ -114,7 +94,6 @@ pub struct Val {
 impl From<Vec<u8>> for Val {
   fn from(val: Vec<u8>) -> Self {
     Val {
-      top: ValType::Byt,
       len: val.len() as u32,
       val,
     }
@@ -124,7 +103,6 @@ impl From<Vec<u8>> for Val {
 impl From<&[u8]> for Val {
   fn from(v: &[u8]) -> Self {
     Val {
-      top: ValType::Byt,
       len: v.len() as u32,
       val: v.to_vec(),
     }
@@ -134,8 +112,8 @@ impl From<&[u8]> for Val {
 impl std::fmt::Display for Val {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.write_fmt(format_args!(
-      "[top: {}, len: {}, val: {:?}]",
-      self.top, self.len, self.val
+      "[len: {}, val: {:?}]",
+      self.len, self.val
     ))
   }
 }
@@ -146,12 +124,12 @@ pub struct Message {
   /// total Message length
   len: u32,
   /// Value container
-  val: Val,
+  val: Vec<u8>,
 }
 
 impl Message {
-  pub fn new(top: OpCode, len: u32, val: Val) -> Message {
-    Message { top, len, val }
+  pub fn new(top: OpCode, len: u32, val: &[u8]) -> Message {
+    Message { top, len, val: val.to_vec() }
   }
   pub fn to_bytes(&self) -> Result<Vec<u8>, Error> {
     let top = u8::to_le_bytes(self.top() as u8);
@@ -159,7 +137,7 @@ impl Message {
     let mut bytes = Vec::with_capacity(5 + self.len() as usize);
     bytes.extend_from_slice(&top);
     bytes.extend_from_slice(&len);
-    bytes.extend_from_slice(&serialize(&self.val)?);
+    bytes.extend_from_slice(&self.val);
     Ok(bytes)
   }
   pub fn top(&self) -> OpCode {
@@ -168,8 +146,8 @@ impl Message {
   pub fn len(&self) -> u32 {
     self.len
   }
-  pub fn val(&self) -> &Val {
-    &self.val
+  pub fn val(&self) -> Vec<u8> {
+    self.val.to_vec()
   }
   pub fn with_top(mut self, top: OpCode) -> Self {
     self.top = top;
@@ -179,8 +157,8 @@ impl Message {
     self.len = len;
     self
   }
-  pub fn with_val(mut self, val: Val) -> Self {
-    self.val = val;
+  pub fn with_val(mut self, val: &[u8]) -> Self {
+    self.val = val.to_vec();
     self
   }
 }
@@ -188,7 +166,7 @@ impl Message {
 impl std::fmt::Display for Message {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.write_fmt(format_args!(
-      "TOP: {}, LEN: {}, VAL: {}",
+      "TOP: {}, LEN: {}, VAL: {:?}",
       self.top, self.len, self.val
     ))
   }

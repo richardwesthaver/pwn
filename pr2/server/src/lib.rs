@@ -54,7 +54,7 @@ pub use cfg::Cfg;
 pub use db::Pool;
 pub use error::Error;
 
-use proto::codec::OpCodec;
+use proto::{api::op::OpCode ,codec::OpCodec};
 
 use bytes::BytesMut;
 use std::{io, net::SocketAddr, sync::Arc};
@@ -124,10 +124,18 @@ impl RxService {
       match inf.get_mut().try_recv_buf_from(&mut buf) {
         Ok((n, client)) => {
           buf.truncate(n);
-          log::trace!("RX: {:?} FROM {}", &buf[..n], &client);
+          log::trace!("RX FROM {}", &client);
           match inf.codec_mut().decode(&mut buf) {
             Ok(Some(m)) => {
-              log::info!("processing message: {m}")
+	      log::trace!("{m}");
+	      let val = m.val();
+	      match m.top() {
+		OpCode::GET => {
+		  let args = String::from_utf8(val).expect("failed to parse bytes as utf8 string");
+		  log::trace!("args: {}", &args);
+		},
+		_ => log::error!("`nyi"),
+	      }
             }
             Ok(None) => continue,
             // FIXME
