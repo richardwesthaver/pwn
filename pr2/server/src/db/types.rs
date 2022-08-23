@@ -9,7 +9,7 @@ pub struct Exists {
   pub exists: bool,
 }
 
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, FromRow, Default)]
 pub struct Job {
   pub id: Uuid,
   pub agent_id: Uuid,
@@ -68,14 +68,8 @@ impl Into<c2::Agent> for Agent {
       id: self.id,
       created_at: self.created_at,
       last_seen: self.last_seen,
-      identity_public_key: self
-        .identity_public_key
-        .try_into()
-        .expect("identity_public_key is invalid converting Agent to api::Agent"),
-      public_prekey: self
-        .public_prekey
-        .try_into()
-        .expect("public_prekey is invalid converting Agent to api::Agent"),
+      identity_public_key: self.identity_public_key.try_into().unwrap_or_default(),
+      public_prekey: self.public_prekey.try_into().unwrap_or_default(),
       public_prekey_signature: self.public_prekey_signature,
     }
   }

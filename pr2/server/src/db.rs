@@ -227,8 +227,16 @@ returning id;
   Ok(rec.id)
 }
 
+// TODO: return AgentsList
 pub async fn list_agents(pool: &Pool) -> Result<Vec<types::Agent>, Error> {
-  sqlx::query_as::<_, types::Agent>("select * from agent order by created_at")
+  sqlx::query_as::<_, types::Agent>("select * from agent")
+    .fetch_all(&pool.reader)
+    .await
+    .map_err(|e| e.into())
+}
+
+pub async fn list_jobs(pool: &Pool) -> Result<Vec<types::Job>, Error> {
+  sqlx::query_as::<_, types::Job>("select * from job")
     .fetch_all(&pool.reader)
     .await
     .map_err(|e| e.into())

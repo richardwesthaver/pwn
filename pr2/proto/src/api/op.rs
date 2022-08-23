@@ -111,10 +111,7 @@ impl From<&[u8]> for Val {
 
 impl std::fmt::Display for Val {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    f.write_fmt(format_args!(
-      "[len: {}, val: {:?}]",
-      self.len, self.val
-    ))
+    f.write_fmt(format_args!("[len: {}, val: {:?}]", self.len, self.val))
   }
 }
 #[derive(Debug, Serialize, Deserialize)]
@@ -129,7 +126,11 @@ pub struct Message {
 
 impl Message {
   pub fn new(top: OpCode, len: u32, val: &[u8]) -> Message {
-    Message { top, len, val: val.to_vec() }
+    Message {
+      top,
+      len,
+      val: val.to_vec(),
+    }
   }
   pub fn to_bytes(&self) -> Result<Vec<u8>, Error> {
     let top = u8::to_le_bytes(self.top() as u8);

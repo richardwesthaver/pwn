@@ -2,25 +2,24 @@ use crate::Error;
 use proto::api::op::{Message, OpCode};
 
 static HELP: &'static str = r#"
-+----------+-------------+----+ 
-| OP       | ARGS        | ?? | 
-|----------+-------------+----| 
-| GET      | [KEY]       |    | 
-| SET      | [KEY] [VAL] |    | 
-| QUERY    | [SQL]       |    | 
-| START    | [ID]        |    | 
-| STOP     | [ID]        |    | 
-| SLEEP    | [SEC]       |    | 
-|----------+-------------+----| 
-| UNSAFE                      | 
-|----------+-------------+----| 
-| SUGET    | [KEY]       |    | 
-| SUSET    | [KEY] [VAL] |    | 
-| SHUTDOWN | nil         |    | 
-\----------+-------------+----/ 
-"#;
+# data
+get k
+set k v
+query 'select a from b order by c'
+# proc
+start id
+stop id
+sleep s
+# unsafe
+suget K
+suset K V
+shutdown"#;
 
-pub fn parse_line(line: &str) -> Result<Message, Error> {
+/// parse a LINE
+pub fn parse_line(line: &str) -> Result<Option<Message>, Error> {
+  if line.is_empty() {
+    return Ok(None);
+  }
   let mut words = line.trim_start().split_whitespace();
   let top_str = words
     .next()
@@ -29,10 +28,11 @@ pub fn parse_line(line: &str) -> Result<Message, Error> {
     .parse()
     .map_err(|_| Error::InvalidValue(HELP.to_string()))?;
   let maybe_val = words.next();
-  let val =
-    if let Some(v) = maybe_val {
-      v.as_bytes()
-    } else { &[] };
+  let val = if let Some(v) = maybe_val {
+    v.as_bytes()
+  } else {
+    &[]
+  };
 
   let len = val.len() as u32 + 5;
 
@@ -40,5 +40,5 @@ pub fn parse_line(line: &str) -> Result<Message, Error> {
 
   log::debug!("{:?}", &msg);
 
-  Ok(msg)
+  Ok(Some(msg))
 }

@@ -87,3 +87,9 @@ impl std::convert::From<proto::Error> for Error {
     }
   }
 }
+
+impl std::convert::From<std::string::FromUtf8Error> for Error {
+  fn from(err: std::string::FromUtf8Error) -> Self {
+    Self::InvalidArgument(err.to_string())
+  }
+}

@@ -40,3 +40,27 @@ impl From<proto::Error> for Error {
     Error::Internal(err.to_string())
   }
 }
+
+impl From<std::string::FromUtf8Error> for Error {
+  fn from(err: std::string::FromUtf8Error) -> Self {
+    Error::Internal(err.to_string())
+  }
+}
+
+impl From<tokio::task::JoinError> for Error {
+  fn from(err: tokio::task::JoinError) -> Self {
+    Error::Internal(err.to_string())
+  }
+}
+
+impl From<tokio::sync::oneshot::error::RecvError> for Error {
+  fn from(err: tokio::sync::oneshot::error::RecvError) -> Self {
+    Error::Internal(err.to_string())
+  }
+}
+
+impl From<tokio::sync::oneshot::error::TryRecvError> for Error {
+  fn from(err: tokio::sync::oneshot::error::TryRecvError) -> Self {
+    Error::Internal(err.to_string())
+  }
+}

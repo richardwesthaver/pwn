@@ -13,3 +13,4 @@ pub use base32;
 pub use base58;
 pub use base64;
 pub use bincode::{deserialize, serialize};
+pub use hex;

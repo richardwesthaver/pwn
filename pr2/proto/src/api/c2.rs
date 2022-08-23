@@ -1,9 +1,10 @@
-use crate::{crypto, serialize, Error};
-
+use crate::{crypto, hex::encode, serialize, Error};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use uuid::Uuid;
+
+use prettytable::{row, Table};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Syn;
@@ -81,6 +82,65 @@ pub struct Job {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct JobsList(pub Vec<Job>);
+
+impl From<Vec<Job>> for JobsList {
+  fn from(v: Vec<Job>) -> Self {
+    Self(v)
+  }
+}
+
+impl std::fmt::Display for JobsList {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let mut tbl = Table::new();
+    tbl.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    tbl.set_titles(row![
+      "id",
+      "agent_id",
+      "encrypted_job",
+      "ephemeral_public_key",
+      "nonce",
+      "signature",
+      "encrypted_result",
+      "result_ephemeral_public_key",
+      "result_nonce",
+      "result_signature"
+    ]);
+    for i in self.0.iter() {
+      tbl.add_row(row![
+        i.id,
+        i.agent_id,
+        encode(&i.encrypted_job),
+        encode(i.ephemeral_public_key),
+        encode(i.nonce),
+        encode(&i.signature),
+        if let Some(ref v) = i.encrypted_result {
+          encode(v)
+        } else {
+          "nil".to_string()
+        },
+        if let Some(v) = i.result_ephemeral_public_key {
+          encode(v)
+        } else {
+          "nil".to_string()
+        },
+        if let Some(v) = i.result_nonce {
+          encode(v)
+        } else {
+          "nil".to_string()
+        },
+        if let Some(ref v) = i.result_signature {
+          encode(v)
+        } else {
+          "nil".to_string()
+        }
+      ]);
+    }
+    f.write_str(&tbl.to_string())
+  }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct JobPayload {
   pub command: String,
   pub args: Vec<String>,
@@ -121,8 +181,39 @@ pub struct Agent {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AgentsList {
-  pub agents: Vec<Agent>,
+pub struct AgentsList(pub Vec<Agent>);
+
+impl From<Vec<Agent>> for AgentsList {
+  fn from(v: Vec<Agent>) -> Self {
+    Self(v)
+  }
+}
+
+impl std::fmt::Display for AgentsList {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let mut tbl = Table::new();
+    tbl.set_format(*prettytable::format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
+    tbl.set_titles(row![
+      "id",
+      "created_at",
+      "last_seen",
+      "identity_public_key",
+      "public_prekey",
+      "public_prekey_signature"
+    ]);
+    for i in self.0.iter() {
+      let row = row![
+        i.id.to_string(),
+        i.created_at,
+        i.last_seen,
+        encode(i.identity_public_key).get(..16).unwrap_or(""),
+        encode(i.public_prekey).get(..16).unwrap_or(""),
+        encode(&i.public_prekey_signature).get(..16).unwrap_or(""),
+      ];
+      tbl.add_row(row);
+    }
+    f.write_str(&tbl.to_string())
+  }
 }
 
 #[derive(Deserialize, Serialize, Clone)]

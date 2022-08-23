@@ -54,7 +54,11 @@ pub use cfg::Cfg;
 pub use db::Pool;
 pub use error::Error;
 
-use proto::{api::op::OpCode ,codec::OpCodec};
+use proto::{
+  api::{c2, op::OpCode},
+  codec::OpCodec,
+  serialize,
+};
 
 use bytes::BytesMut;
 use std::{io, net::SocketAddr, sync::Arc};
@@ -117,25 +121,71 @@ impl RxService {
     log::info!("udp rx_service binding on: {}", self.addr);
     let socket = UdpSocket::bind(self.addr).await?;
     let mut inf = UdpFramed::new(socket, OpCodec {});
+    let mut rx_buf = &mut BytesMut::with_capacity(proto::codec::op::MAX_FRAME_SIZE);
+    let mut tx_buf = &mut BytesMut::with_capacity(proto::codec::op::MAX_FRAME_SIZE);
     loop {
-      let mut buf = &mut BytesMut::new();
       // wait for socket to be readable
       inf.get_ref().readable().await?;
-      match inf.get_mut().try_recv_buf_from(&mut buf) {
+      match inf.get_mut().try_recv_buf_from(&mut rx_buf) {
         Ok((n, client)) => {
-          buf.truncate(n);
+          rx_buf.truncate(n);
           log::trace!("RX FROM {}", &client);
-          match inf.codec_mut().decode(&mut buf) {
+          match inf.codec_mut().decode(&mut rx_buf) {
             Ok(Some(m)) => {
-	      log::trace!("{m}");
-	      let val = m.val();
-	      match m.top() {
-		OpCode::GET => {
-		  let args = String::from_utf8(val).expect("failed to parse bytes as utf8 string");
-		  log::trace!("args: {}", &args);
-		},
-		_ => log::error!("`nyi"),
-	      }
+              log::trace!("{m}");
+              let val = m.val();
+              match m.top() {
+                OpCode::GET => {
+                  let argstr = String::from_utf8(val)?;
+                  log::trace!("args: {}", &argstr);
+
+                  let mut args = argstr.split_whitespace();
+
+                  match args.next() {
+                    Some(key) => {
+                      log::trace!("getting key: {}", &key);
+                      match key {
+                        "agents" => {
+                          let res: c2::AgentsList = db::list_agents(&self.pool)
+                            .await?
+                            .into_iter()
+                            .map(|a| a.into())
+                            .collect::<Vec<c2::Agent>>()
+                            .into();
+                          log::trace!("sending response: {:?}", res);
+                          tx_buf.extend(res.to_string().bytes())
+                        }
+                        "jobs" => {
+                          let res: c2::JobsList = db::list_jobs(&self.pool)
+                            .await?
+                            .into_iter()
+                            .map(|a| a.into())
+                            .collect::<Vec<c2::Job>>()
+                            .into();
+                          log::trace!("sending response: {:?}", res);
+                          tx_buf.extend(res.to_string().bytes())
+                        }
+                        _ => {
+                          log::error!("`val: invalid key")
+                        }
+                      }
+                      // wait for socket to be writable
+                      inf.get_ref().writable().await?;
+                      match inf.get_mut().try_send_to(&mut tx_buf, client) {
+                        Ok(n) => log::trace!("TX {} TO {}", n, client),
+                        Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                          continue;
+                        }
+                        Err(e) => return Err(e.into()),
+                      }
+                      tx_buf.clear();
+                      rx_buf.clear();
+                    }
+                    None => log::error!("`val: missing key"),
+                  }
+                }
+                _ => log::error!("`nyi"),
+              }
             }
             Ok(None) => continue,
             // FIXME

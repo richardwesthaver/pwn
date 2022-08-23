@@ -1,6 +1,6 @@
 use crate::{
-  Error,
   api::op::{Message, OpCode},
+  Error,
 };
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
