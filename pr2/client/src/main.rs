@@ -17,7 +17,7 @@ async fn main() -> Result<(), Error> {
   let cfg = Cfg::parse();
 
   // initialize our service
-  let srv = Service::new(cfg.client_addr, cfg.server_addr)?;
+  let mut srv = Service::new(cfg.client_addr, cfg.server_addr)?;
 
   // start the service
   srv.start().await?;

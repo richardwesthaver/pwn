@@ -65,7 +65,7 @@ pub fn routes(
   state: Arc<AppState>,
 ) -> impl Filter<Extract = impl warp::Reply, Error = Infallible> + Clone {
   let api = warp::path("pr2");
-  let api_with_state = api.and(with_state(state));
+  let _api_with_state = api.and(with_state(state));
   let index = api.and(warp::path::end()).and(warp::get()).and_then(index);
 
   let routes = index.with(warp::log("http_server")).recover(handle_error);

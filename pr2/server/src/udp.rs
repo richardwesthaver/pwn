@@ -1,14 +1,14 @@
-use proto::codec::{c2::C2Codec, MTU};
-use tokio::net::UdpSocket;
-use tokio_util::udp::UdpFramed;
+// use proto::codec::c2::C2Codec;
+// use tokio::net::UdpSocket;
+// use tokio_util::udp::UdpFramed;
 
-pub struct UdpRx {
-  socket: UdpSocket,
-  codec: C2Codec,
-}
+// pub struct UdpRx {
+//   socket: UdpSocket,
+//   codec: C2Codec,
+// }
 
-impl UdpRx {}
+// impl UdpRx {}
 
-pub struct UdpTx {
-  socket: UdpSocket,
-}
+// pub struct UdpTx {
+//   socket: UdpSocket,
+// }

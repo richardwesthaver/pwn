@@ -23,7 +23,7 @@ use proto::codec::OpCodec;
 
 use bytes::BytesMut;
 use rustyline::Editor;
-use std::{net::SocketAddr, time::Duration};
+use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 use tokio_util::{codec::Encoder, udp::UdpFramed};
 
@@ -46,7 +46,7 @@ impl Service {
 
   /// Start the service, running indefinitely or until an
   /// unrecoverable error is encountered.
-  pub async fn start(mut self) -> Result<(), Error> {
+  pub async fn start(&mut self) -> Result<(), Error> {
     // bind to socket
     let socket = UdpSocket::bind(self.client).await?;
     log::info!("client binding to socket {}", socket.local_addr()?);
@@ -73,7 +73,7 @@ impl Service {
 
           // receive a response
           // TODO: configurable timeout
-          std::thread::sleep(Duration::from_millis(200));
+          //          std::thread::sleep(Duration::from_millis(200));
           loop {
             if let Ok((n, client)) = inf.get_mut().try_recv_buf_from(&mut rx_buf) {
               // ensure we're talking to the same server, then process response
@@ -82,35 +82,27 @@ impl Service {
 
                 // parse as string
                 let res = String::from_utf8(rx_buf.to_vec())?;
-
-                // process newline chars
-                // TODO: support other control chars? \n\r?
-                for i in res.chars() {
-                  if i == '\n' {
-                    println!("")
-                  } else {
-                    print!("{}", i)
-                  }
-                }
+                println!("{}", res.trim());
                 break;
               } else {
                 // warn user of mitm encounter
                 log::warn!("UNSOLICITED RX {} FROM {}", n, client);
+                continue;
               }
             }
           }
+          // clear buffer in preparation for next iteration
+          tx_buf.clear();
+          rx_buf.clear();
         }
         // no input
         Ok(None) => continue,
         // invalid message
         Err(e) => {
           eprintln!("error: {e}");
+          continue;
         }
       }
-
-      // clear buffer in preparation for next iteration
-      tx_buf.clear();
-      rx_buf.clear();
     }
     Ok(())
   }

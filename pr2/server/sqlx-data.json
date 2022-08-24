@@ -1,5 +1,39 @@
 {
   "db": "PostgreSQL",
+  "1b0491e904d8888d0892c8f1c790b985bebcc3ae1ce9dd2c1e5220763ced3d2c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bytea",
+          "Bytea",
+          "Bytea",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "\ninsert into job(id, agent_id, encrypted_job, ephemeral_public_key, nonce, signature)\nvalues ($1, $2, $3, $4, $5, $6)"
+  },
+  "7abcf59a0e6d224a482418f6ed46b7a8b5c9bc2c600ae791734be704142cf02f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bytea",
+          "Bytea",
+          "Bytea",
+          "Bytea"
+        ]
+      }
+    },
+    "query": "\nupdate job set (agent_id, encrypted_job, ephemeral_public_key, nonce, signature)\n= ($2, $3, $4, $5, $6) where id = $1"
+  },
   "9d397407e8e35ddd75cceafb051fb1ad9a48070d15db0b3d785b537f853413c6": {
     "describe": {
       "columns": [
@@ -15,11 +49,11 @@
       "parameters": {
         "Left": [
           "Uuid",
-          "Bytea",
-          "Bytea",
-          "Bytea",
           "Timestamptz",
-          "Timestamptz"
+          "Timestamptz",
+          "Bytea",
+          "Bytea",
+          "Bytea"
         ]
       }
     },

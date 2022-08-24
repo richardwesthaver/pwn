@@ -33,7 +33,13 @@ for agents and collects job results for review by the operator.
 - =client= is the c2 user interface
   - operators should use this program to control the c2 server
 * tasks
-** TODO db queries
+** TODO OpCodec result encoding
+currently thinking of encoding this in opcode.. GET_JSON GET_CSV etc
+- text (default)
+- json
+- csv
+
+** DONE db queries
   - agents
   - jobs
 ** TODO stage0

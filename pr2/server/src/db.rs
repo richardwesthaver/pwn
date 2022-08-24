@@ -57,8 +57,9 @@ impl Pool {
 }
 
 pub async fn prepare_pg_pool(pool: &Pool) -> Result<(), Error> {
-  if pg_table_exists("'agent'", &pool).await? {
+  if !pg_table_exists("agent", &pool).await? {
     create_extensions(&pool).await?;
+    create_types(&pool).await?;
     create_tables(&pool).await?;
   }
   Ok(())
@@ -71,7 +72,7 @@ select exists (select from pg_tables where schemaname = 'public' and tablename =
 "#,
   )
   .bind(tbl)
-  .fetch_one(&pool.writer)
+  .fetch_one(&pool.reader)
   .await?;
   Ok(res.exists)
 }
@@ -127,8 +128,8 @@ create collation if not exists case_insensitive (provider = icu, locale = 'und-u
   Ok(())
 }
 
-async fn create_types(pool: &Pool) -> Result<(), Error> {
-  sqlx::query("CREATE TYPE job_status AS ENUM ('SCHEDULED', 'PENDING', 'DONE', 'FAILED');")
+pub async fn create_types(pool: &Pool) -> Result<(), Error> {
+  sqlx::query("CREATE TYPE job_status AS ENUM ('TODO', 'SCHEDULED', 'PENDING', 'DONE', 'FAILED');")
     .execute(&pool.writer)
     .await?;
 
@@ -138,17 +139,16 @@ async fn create_types(pool: &Pool) -> Result<(), Error> {
   Ok(())
 }
 
-async fn create_tables(pool: &Pool) -> Result<(), Error> {
+pub async fn create_tables(pool: &Pool) -> Result<(), Error> {
   sqlx::query(
     "
 CREATE TABLE IF NOT EXISTS agent (
     id uuid PRIMARY KEY NOT NULL,
+    created_at timestamptz NOT NULL,
+    last_seen timestamptz NOT NULL,
     public_prekey bytea NOT NULL,
     public_prekey_signature bytea NOT NULL,
-    identity_public_key bytea NOT NULL,    
-    created_at timestamptz NOT NULL,
-    last_seen timestamptz NOT NULL
-);
+    identity_public_key bytea NOT NULL);
         ",
   )
   .execute(&pool.writer)
@@ -159,14 +159,14 @@ CREATE TABLE IF NOT EXISTS agent (
 CREATE TABLE IF NOT EXISTS job (
     id uuid PRIMARY KEY NOT NULL,
     agent_id uuid NOT NULL,
+    created_at timestamptz default current_timestamp,
+    updated_at timestamptz,
+    encrypted_job bytea NOT NULL,
     ephemeral_public_key bytea NOT NULL,
     nonce bytea NOT NULL,
     signature bytea NOT NULL,
-    updated_at timestamptz,
-    status job_status NOT NULL,
-    type job_type NOT NULL,
-    payload bytea NOT NULL
-);
+    status job_status default TODO,
+    type job_type default TASK);
         ",
   )
   .execute(&pool.writer)
@@ -179,12 +179,14 @@ CREATE TABLE IF NOT EXISTS job (
   sqlx::query(
     "
 CREATE TABLE IF NOT EXISTS job_result (
-    result_id uuid PRIMARY KEY NOT NULL,
+    id uuid PRIMARY KEY NOT NULL,
     job_id uuid NOT NULL,
-    result text NOT NULL,
-    created_at timestamptz NOT NULL,
-    updated_at timestamptz
-);",
+    created_at timestamptz default current_timestamp,
+    updated_at timestamptz default current_timestamp,
+    encrypted_result bytea,
+    result_ephemeral_public_key bytea,
+    result_nonce bytea,
+    result_signature bytea);",
   )
   .execute(&pool.writer)
   .await?;
@@ -216,11 +218,11 @@ values ($1, $2, $3, $4, $5, $6)
 returning id;
 "#,
     agent.id,
+    agent.created_at,
+    agent.last_seen,
     agent.public_prekey,
     agent.public_prekey_signature,
     agent.identity_public_key,
-    agent.created_at,
-    agent.last_seen,
   )
   .fetch_one(&pool.writer)
   .await?;
@@ -251,6 +253,40 @@ update agent set last_seen = $1 where id = $2;
     id
   )
   .fetch_one(&pool.writer)
+  .await?;
+  Ok(())
+}
+
+pub async fn insert_job(job: &types::Job, pool: &Pool) -> Result<(), Error> {
+  sqlx::query!(
+    r#"
+insert into job(id, agent_id, encrypted_job, ephemeral_public_key, nonce, signature)
+values ($1, $2, $3, $4, $5, $6)"#,
+    job.id,
+    job.agent_id,
+    job.encrypted_job,
+    job.ephemeral_public_key,
+    job.nonce,
+    job.signature
+  )
+  .execute(&pool.writer)
+  .await?;
+  Ok(())
+}
+
+pub async fn update_job(job: &types::Job, pool: &Pool) -> Result<(), Error> {
+  sqlx::query!(
+    r#"
+update job set (agent_id, encrypted_job, ephemeral_public_key, nonce, signature)
+= ($2, $3, $4, $5, $6) where id = $1"#,
+    job.id,
+    job.agent_id,
+    job.encrypted_job,
+    job.ephemeral_public_key,
+    job.nonce,
+    job.signature
+  )
+  .execute(&pool.writer)
   .await?;
   Ok(())
 }

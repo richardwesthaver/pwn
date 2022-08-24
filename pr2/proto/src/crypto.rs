@@ -3,7 +3,7 @@
 //! NOTE: Our encryption scheme is focused on c2 <--> agent comms,
 //! client <--> c2 comms are unencrypted.
 //!
-//! c2 is started with a 32-byte string (base64 encoded) which is used
+//! c2 is started with a 32-byte string (hex encoded) which is used
 //! as the server's 'PublicKey' and shared with new agents.
 //!
 //! Agents are then able to register themselves with the c2 by using

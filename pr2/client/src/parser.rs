@@ -20,25 +20,28 @@ pub fn parse_line(line: &str) -> Result<Option<Message>, Error> {
   if line.is_empty() {
     return Ok(None);
   }
-  let mut words = line.trim_start().split_whitespace();
-  let top_str = words
-    .next()
-    .ok_or(Error::InvalidValue("bad op".to_string()))?;
-  let top: OpCode = top_str
-    .parse()
-    .map_err(|_| Error::InvalidValue(HELP.to_string()))?;
-  let maybe_val = words.next();
-  let val = if let Some(v) = maybe_val {
-    v.as_bytes()
+
+  let line = line.trim_start();
+
+  // a value was provided, split to (op, val)
+  if let Some((op, val)) = line.split_once(' ') {
+    let top: OpCode = op
+      .parse()
+      .map_err(|_| Error::InvalidValue(HELP.to_string()))?;
+    let val = val.as_bytes();
+    let len = val.len() as u32 + 5;
+    let msg = Message::new(top, len, val);
+    log::debug!("{:?}", &msg);
+    Ok(Some(msg))
+  } else if let Some(op) = line.split_whitespace().next() {
+    let top: OpCode = op
+      .parse()
+      .map_err(|_| Error::InvalidValue(HELP.to_string()))?;
+    let val = &[];
+    let len = 5;
+    let msg = Message::new(top, len, val);
+    return Ok(Some(msg));
   } else {
-    &[]
-  };
-
-  let len = val.len() as u32 + 5;
-
-  let msg = Message::new(top, len, val);
-
-  log::debug!("{:?}", &msg);
-
-  Ok(Some(msg))
+    return Ok(None);
+  }
 }

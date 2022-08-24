@@ -34,7 +34,7 @@ pub struct Cfg {
   pub tx_addr: SocketAddr,
   #[clap(short, long, env, default_value = "postgres://localhost/pr2.db")]
   pub database_url: Url,
-  // this should be a 32-byte base64 encoded string
+  // this should be a 32-byte hex string (64 chars)
   #[clap(short, long, env)]
   pub client_public_key: String,
   #[clap(short, long, env, default_value = "udp")]
