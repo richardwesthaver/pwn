@@ -11,12 +11,18 @@ for agents and collects job results for review by the operator.
 
 #+begin_src shell
   # server
-  cargo run --bin server -- -d
+  cargo run --bin server
   # operator
   cargo run --bin client
   # agent
   cargo run --bin agent
 #+end_src
+
+While testing it is acceptable to run all programs on the same machine
+using the debug profile. If using the release profile (=cargo build
+--release=) you should run the =agent= in a VM or container
+though. The agent will attempt to install itself when executed and you
+don't want to clutter up your dev box.
 
 * hacking
 - =proto= contains common types and traits
