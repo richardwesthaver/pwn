@@ -2,12 +2,32 @@
 #+DESCRIPTION: poor richard's pet rat
 
 This project contains 3 binaries: =agent=, =server=, and
-=client=. =agent= is installed on your target's machine, =server= is
-installed on your (c2) webserver, and =client= is installed on your
-operating machine.
+=client=.
 
-Messages are sent from the client to the server which schedules jobs
-for agents and collects job results for review by the operator.
+=agent= is installed on your target's machine, =server= is installed
+on your (c2) webserver, and =client= is installed on your operating
+machine.
+
+The client-server protocol (aka Op protocol) consists of messages
+which are sent from the client to the server over UDP. Messages are
+interpreted by the server which in turn schedules jobs for agents and
+collects job results for review by the operator. Note that there is no
+encryption built-in. It is the responsibility of the operator to
+ensure a reasonable level of confidentiality and authenticity for both
+client and server messages. This can be achieved by using the lib
+directly and wrapping messages or by implementing middleware.
+
+Agents never see Messages directly, they only communicate directly
+with the server, which communicates with the client.
+
+The server-agent protocol (aka C2 protocol) consists of encrypted
+messages wrapped in individual packets. It is designed to work over
+multiple L4/7 protocols concurrently which can lead to some
+interesting deployment configurations. For example, you can
+communicate with agent1 over DNS, agent2 via HTTP, and agent3
+UDP. Perhaps our traffic gets sniffed and agent2 suddenly loses its
+HTTP connection. No problem, agent2 can seamlessly migrate to DNS and
+even send a message to alert the operator of a potential compromise.
 
 #+begin_src shell
   # server
@@ -20,9 +40,9 @@ for agents and collects job results for review by the operator.
 
 While testing it is acceptable to run all programs on the same machine
 using the debug profile. If using the release profile (=cargo build
---release=) you should run the =agent= in a VM or container
-though. The agent will attempt to install itself when executed and you
-don't want to clutter up your dev box.
+--release=) you should run the =agent= in a VM or container. The agent
+will attempt to install itself when executed and you don't want to
+clutter up your dev box.
 
 * hacking
 - =proto= contains common types and traits
@@ -39,6 +59,18 @@ don't want to clutter up your dev box.
 - =client= is the c2 user interface
   - operators should use this program to control the c2 server
 * tasks
+** TODO opsec examples
+- for the op_codec need examples of:
+  - using the lib to create a message wrapper
+  - using middleware to provide security (wireshark?)
+** TODO op aliases
+- pretty much anything with IDs should have aliases
+- where do we store this information?
+- perhaps a separate table - aliases - containing user-defined aliases
+  - COLS
+    - alias
+    - type
+    - id
 ** TODO OpCodec result encoding
 currently thinking of encoding this in opcode.. GET_JSON GET_CSV etc
 - text (default)
@@ -73,7 +105,6 @@ postgres SQL
 use sqlx offline mode
 
 * resources
-- [[https://www.emacswiki.org/emacs/widget-demo.el][widget-demo.el]]
 - [[https://docs.rs/tokio-util/latest/tokio_util/index.html][tokio_util]]
 - [[https://docs.rs/sqlx/latest/sqlx/index.html][sqlx]]
 - [[https://github.com/rustrat/rustrat][rustrat]]

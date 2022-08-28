@@ -1,10 +1,4 @@
-mod cfg;
-mod error;
-mod init;
-mod install;
-pub use error::Error;
-
-use cfg::INSTANCE_ID;
+use agent::{init, cfg::INSTANCE_ID};
 use single_instance::SingleInstance;
 use std::{thread, time};
 

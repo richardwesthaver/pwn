@@ -4,6 +4,14 @@
 + source code: [[https://hg.rwest.io/pwn]]
   - [[https://github.com/richardwesthaver/pwn][github mirror]]
 
+#+begin_center
+DISCLAIMER
+
+This project is made publicly available for educational purposes
+only. Please do not use these tools with machines that are not your
+own or with an intent to cause harm.
+#+end_center
+
 =pwn= is a collection of mischievous software and data.
 
 * hacking

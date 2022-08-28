@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "pr2-client"
+name = "client"
 path = "src/main.rs"
 
 [lib]
