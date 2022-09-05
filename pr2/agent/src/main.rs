@@ -1,17 +1,14 @@
-use agent::{init, cfg::INSTANCE_ID};
+use agent::cfg::INSTANCE_ID;
 use single_instance::SingleInstance;
-use std::{thread, time};
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-  let instance = SingleInstance::new(INSTANCE_ID)?;
-  if !instance.is_single() {
-    return Ok(());
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  if cfg!(profile="release") {
+    let instance = SingleInstance::new(INSTANCE_ID)?;
+    if !instance.is_single() {
+      return Ok(());
+    }
   }
-
-  let _ = init::init_and_install()?;
-
-  let one_sec = time::Duration::from_secs(1);
-  loop {
-    thread::sleep(one_sec);
-  }
+  let cfg = agent::init::init_and_install()?;
+  let mut srv = agent::Service::new("127.0.0.1:8053".parse()?, None, cfg)?;
+  srv.start().await?
 }

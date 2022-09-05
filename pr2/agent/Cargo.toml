@@ -3,6 +3,14 @@ name = "agent"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "agent"
+path = "src/main.rs"
+
+[features]
+all =  ["exe"]
+exe = []
+
 [dependencies]
 proto = { path = "../proto" }
 uuid = { version = "1", features = ["serde", "v4"] }
@@ -15,6 +23,11 @@ x25519-dalek = "1"
 single-instance = "0.3"
 zip = "0.6"
 base64 = "0.13"
+tokio = { version = "1.21.0", features = ["full"] }
+tokio-util = { version = "0.7.3", features = ["codec", "net"] }
+bytes = "1.2.1"
+reqwest = "0.11.11"
+trust-dns-resolver = { version = "0.20.3", optional = true }
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.10"

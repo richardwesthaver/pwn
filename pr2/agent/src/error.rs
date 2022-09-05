@@ -48,3 +48,9 @@ impl std::convert::From<std::string::FromUtf8Error> for Error {
     Error::Internal(err.to_string())
   }
 }
+
+impl std::convert::From<std::net::AddrParseError> for Error {
+  fn from(err: std::net::AddrParseError) -> Self {
+    Error::Internal(err.to_string())
+  }
+}

@@ -11,7 +11,7 @@ pub fn init_and_install() -> Result<cfg::Config, Error> {
     Some(agent_id) => agent_id,
     None => {
       install::install()?;
-      let conf = register()?;
+      let conf = init()?;
       save_agent_config(&conf)?;
       conf
     }
@@ -20,7 +20,7 @@ pub fn init_and_install() -> Result<cfg::Config, Error> {
   Ok(conf)
 }
 
-pub fn register() -> Result<cfg::Config, Error> {
+pub fn init() -> Result<cfg::Config, Error> {
   let mut rand_generator = rand::rngs::OsRng {};
 
   let identity_keypair = ed25519_dalek::Keypair::generate(&mut rand_generator);
@@ -40,7 +40,6 @@ pub fn register() -> Result<cfg::Config, Error> {
     private_prekey,
     client_identity_public_key,
   };
-
   Ok(conf)
 }
 

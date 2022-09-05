@@ -24,7 +24,7 @@ fn install_launchd(executable: &PathBuf) -> Result<(), crate::Error> {
     <plist version="1.0">
         <dict>
             <key>Label</key>
-            <string>com.apple.cloudd</string>
+            <string>com.pr2.agent</string>
             <key>ProgramArguments</key>
             <array>
                 <string>{}</string>
@@ -52,6 +52,7 @@ fn install_launchd(executable: &PathBuf) -> Result<(), crate::Error> {
 
   Command::new("launchctl")
     .arg("load")
+    .arg("-w")
     .arg(launchd_file.display().to_string())
     .output()?;
 

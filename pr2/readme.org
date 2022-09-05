@@ -105,7 +105,11 @@ postgres SQL
 use sqlx offline mode
 
 * resources
-- [[https://docs.rs/tokio-util/latest/tokio_util/index.html][tokio_util]]
-- [[https://docs.rs/sqlx/latest/sqlx/index.html][sqlx]]
-- [[https://github.com/rustrat/rustrat][rustrat]]
-- [[https://github.com/iagox86/dnscat2][dnscat2]]
+- docs 
+  - [[https://docs.rs/tokio-util/latest/tokio_util/index.html][tokio_util]]
+  - [[https://docs.rs/sqlx/latest/sqlx/index.html][sqlx]]
+  - [[https://github.com/rustrat/rustrat][rustrat]]
+  - [[https://github.com/iagox86/dnscat2][dnscat2]]
+- wiki
+  - [[https://en.wikipedia.org/wiki/Message_authentication_code][MAC]]
+  - [[https://en.wikipedia.org/wiki/Authenticated_encryption][AEAD]]

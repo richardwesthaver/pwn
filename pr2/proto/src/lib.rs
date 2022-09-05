@@ -6,7 +6,6 @@ pub mod api;
 pub mod codec;
 pub mod crypto;
 pub mod error;
-
 pub use error::{Error, Result};
 
 pub use base32;

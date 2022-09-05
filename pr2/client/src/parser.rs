@@ -21,7 +21,7 @@ pub fn parse_line(line: &str) -> Result<Option<Message>, Error> {
     return Ok(None);
   }
 
-  let line = line.trim_start();
+  let line = line.trim();
 
   // a value was provided, split to (op, val)
   if let Some((op, val)) = line.split_once(' ') {
